@@ -3,6 +3,7 @@ import ast
 import contextlib
 import textwrap
 from io import StringIO
+from unittest import mock
 
 from codestructure import (
     Class,
@@ -11,6 +12,7 @@ from codestructure import (
     Parameter,
     add_parent_list,
     extract_function_info,
+    main,
     print_function_info,
 )
 
@@ -201,6 +203,51 @@ def test_print_function_info_without_private() -> None:
 
     with StringIO() as string, contextlib.redirect_stdout(string):
         print_function_info(extracted_functions, with_private=False)
+        output = string.getvalue()
+
+    assert output.strip() == expected_output.strip()
+
+
+def test_main() -> None:
+    """Test main function."""
+    module_file_path = "test_module.py"
+    source_code = textwrap.dedent(
+        """
+        def example_function(a: int, b: int = 2) -> int:
+            \"\"\"An example function.\"\"\"
+            return a + b
+
+        class ExampleClass:
+            x: int
+            y: int = 3
+
+            def example_method(self) -> None:
+                \"\"\"An example method.\"\"\"
+                pass
+        """,
+    )
+    with open(module_file_path, "w") as f:  # noqa: PTH123
+        f.write(source_code)
+
+    expected_output = textwrap.dedent(
+        """\
+        class ExampleClass:
+            x: int
+            y: int
+            def example_method(self) -> None:
+                \"\"\"An example method.\"\"\"
+
+
+        def example_function(a: int, b: int = 2) -> int:
+            \"\"\"An example function.\"\"\"
+        """,
+    )
+
+    args = ["codestructure", module_file_path, "--no-private"]
+    with mock.patch("sys.argv", args), StringIO() as string, contextlib.redirect_stdout(
+        string,
+    ):
+        main()
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
