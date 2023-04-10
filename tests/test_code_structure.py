@@ -3,6 +3,7 @@ import ast
 import contextlib
 import textwrap
 from io import StringIO
+from pathlib import Path
 from unittest import mock
 
 from codestructure import (
@@ -16,6 +17,8 @@ from codestructure import (
     parse_module,
     print_function_info,
 )
+
+REPO_ROOT = Path(__file__).parent.parent
 
 
 def test_parse_module() -> None:
@@ -449,3 +452,30 @@ def test_print_function_info_with_private_class_attribute() -> None:
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
+
+
+def test_example_file() -> None:
+    """Test example file."""
+    test_file = REPO_ROOT / "tests" / "example.py"
+    with test_file.open() as f:
+        source_code = f.read()
+
+    tree = parse_module(source_code=source_code)
+    function_info = extract_function_info(tree)
+
+    with StringIO() as string, contextlib.redirect_stdout(string):
+        print_function_info(function_info, with_private=False)
+        output = string.getvalue()
+    expected = textwrap.dedent(
+        """
+        class MyClass:
+            my_attr: str
+            def my_method(self, arg1: int) -> bool:
+                \"\"\"My docstring.\"\"\"
+
+
+        def my_function(arg2: float) -> None:
+            ...
+        """,
+    )
+    assert output.strip() == expected.strip()
