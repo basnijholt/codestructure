@@ -354,3 +354,98 @@ def test_extract_function_info_with_value_error_in_literal_eval() -> None:
     function_info = extract_function_info(tree)
 
     assert function_info == expected_functions
+
+
+def test_print_function_info_with_class_docstring() -> None:
+    """Test print_function_info with a class that has a docstring."""
+    extracted_functions = ExtractedFunctions(
+        classes=[
+            (
+                "Foo",
+                Class(
+                    class_name="Foo",
+                    docstring="Some exception.",
+                    attributes=[],
+                    functions={},
+                ),
+            ),
+        ],
+        functions=[],
+    )
+
+    expected_output = textwrap.dedent(
+        """\
+        class Foo:
+            \"\"\"Some exception.\"\"\"
+        """,
+    )
+
+    with StringIO() as string, contextlib.redirect_stdout(string):
+        print_function_info(extracted_functions, with_private=True)
+        output = string.getvalue()
+
+    assert output.strip() == expected_output.strip()
+
+
+def test_print_function_info_with_class_attribute() -> None:
+    """Test print_function_info with a class that has an attribute."""
+    extracted_functions = ExtractedFunctions(
+        classes=[
+            (
+                "A",
+                Class(
+                    class_name="A",
+                    docstring=None,
+                    attributes=[("x", "int")],
+                    functions={},
+                    decorator="dataclass",
+                ),
+            ),
+        ],
+        functions=[],
+    )
+
+    expected_output = textwrap.dedent(
+        """
+        @dataclass
+        class A:
+            x: int
+        """,
+    )
+
+    with StringIO() as string, contextlib.redirect_stdout(string):
+        print_function_info(extracted_functions, with_private=True)
+        output = string.getvalue()
+
+    assert output.strip() == expected_output.strip()
+
+
+def test_print_function_info_with_private_class_attribute() -> None:
+    """Test print_function_info with a class that has a private attribute."""
+    extracted_functions = ExtractedFunctions(
+        classes=[
+            (
+                "A",
+                Class(
+                    class_name="A",
+                    docstring=None,
+                    attributes=[("_priv", "bool")],
+                    functions={},
+                ),
+            ),
+        ],
+        functions=[],
+    )
+
+    expected_output = textwrap.dedent(
+        """\
+        class A:
+            ...
+        """,
+    )
+
+    with StringIO() as string, contextlib.redirect_stdout(string):
+        print_function_info(extracted_functions, with_private=False)
+        output = string.getvalue()
+
+    assert output.strip() == expected_output.strip()

@@ -71,6 +71,8 @@ class Class:
     class_name: str
     attributes: list[tuple[str, str | None]]
     functions: dict[str, Function] = field(default_factory=dict)
+    docstring: str | None = None
+    decorator: str | None = None
 
 
 @dataclass
@@ -112,7 +114,7 @@ def extract_function_info(
         return None
 
     def get_decorator_name(
-        node: ast.FunctionDef | ast.AsyncFunctionDef,
+        node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
     ) -> str | None:
         for decorator in node.decorator_list:
             if isinstance(decorator, ast.Name | ast.Attribute):
@@ -156,8 +158,18 @@ def extract_function_info(
                 for stmt in node.body
                 if isinstance(stmt, ast.AnnAssign) and isinstance(stmt.target, ast.Name)
             ]
+            decorator_name = get_decorator_name(node)
+            class_docstring = ast.get_docstring(node)
             result.classes.append(
-                (node.name, Class(class_name=node.name, attributes=class_attributes)),
+                (
+                    node.name,
+                    Class(
+                        class_name=node.name,
+                        docstring=class_docstring,
+                        attributes=class_attributes,
+                        decorator=decorator_name,
+                    ),
+                ),
             )
 
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
@@ -241,14 +253,30 @@ def print_function_info(
         return f"{decorator}{signature}\n{docstring}\n"
 
     for class_name, class_info in function_info.classes:
+        if class_info.decorator:
+            print(f"@{class_info.decorator}")
         print(f"class {class_name}:")
-        for attr_name, attr_type in class_info.attributes:
+
+        attrs = [
+            (attr_name, attr_type)
+            for attr_name, attr_type in class_info.attributes
+            if with_private or not _is_private(attr_name)
+        ]
+        methods = [
+            (method_name, method)
+            for method_name, method in class_info.functions.items()
+            if with_private or not _is_private(method_name)
+        ]
+
+        if class_info.docstring:
+            print(f'    """{class_info.docstring}"""')
+        elif not attrs and not methods:
+            print("    ...")
+
+        for attr_name, attr_type in attrs:
             print(f"    {attr_name}: {attr_type}" if attr_type else f"    {attr_name}")
 
-        for method_name, method in class_info.functions.items():
-            if not with_private and _is_private(method_name):
-                continue
-
+        for _method_name, method in methods:
             print(format_function(method, 4))
         print()
 

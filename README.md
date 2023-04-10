@@ -49,7 +49,7 @@ Run the script with the `--help` flag to see all available options:
 ```bash
 codestructure --help
 ```
-Which should output:
+Which outputs:
 
 <!-- CODE:BASH:START -->
 <!-- echo '```bash' -->
