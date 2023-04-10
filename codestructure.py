@@ -21,26 +21,42 @@ def parse_module_file(file_path: str) -> ast.Module:
         source_code = f.read()
 
     return ast.parse(source_code)
+@dataclass
+class Function:
+    signature: str
+    docstring: Optional[str]
+    decorator: Optional[str]
+    parameters: list[tuple[str, Optional[str], Optional[Any]]]
+    return_type: Optional[str]
+
+
+@dataclass
+class Class:
+    class_name: str
+    attributes: list[tuple[str, Optional[str]]]
+    functions: dict[str, Function] = field(default_factory=dict)
+
+
+@dataclass
+class ExtractedFunctions:
+    classes: dict[str, Class] = field(default_factory=dict)
+    functions: dict[str, Function] = field(default_factory=dict)
 
 
 def extract_function_info(
     tree: ast.Module,
-) -> dict[str, Union[dict[str, Any], dict[str, dict[str, Any]]]]:
+) -> ExtractedFunctions:
     """Extract information about classes and functions from the AST of a Python module.
 
-    Parameters
-    ----------
-    tree
-        The AST representation of the module.
+    Args:
+    ----
+        tree: The AST representation of the module.
 
-    Returns
+    Returns:
     -------
-    A dictionary containing information about the classes and functions in the module.
+        An ExtractedFunctions object containing information about the classes and functions in the module.
     """
-    result: dict[str, Union[dict[str, Any], dict[str, dict[str, Any]]]] = {
-        "classes": {},
-        "functions": {},
-    }
+    result = ExtractedFunctions()
     class_names: list[str] = []
 
     def get_class_name(node: ast.FunctionDef) -> Optional[str]:
@@ -83,10 +99,10 @@ def extract_function_info(
                 for stmt in node.body
                 if isinstance(stmt, ast.AnnAssign) and isinstance(stmt.target, ast.Name)
             ]
-            result["classes"][node.name] = {
-                "class": node.name,
-                "attributes": class_attributes,
-            }
+            result.classes[node.name] = Class(
+                class_name=node.name,
+                attributes=class_attributes,
+            )
 
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             if any(
@@ -109,18 +125,17 @@ def extract_function_info(
             }
 
             if class_name:
-                class_functions = result["classes"][class_name].setdefault(
-                    "functions",
-                    {},
-                )
-                class_functions[function_name] = {
-                    "signature": f"{class_name}.{function_name}",
-                    "class": class_name,
+                function = Function(
+                    signature=f"{class_name}.{function_name}",
                     **kw,
-                }
+                )
+                result.classes[class_name].functions[function_name] = function
             else:
-                result["functions"][function_name] = {"signature": function_name, **kw}
-
+                function = Function(
+                    signature=function_name,
+                    **kw,
+                )
+                result.functions[function_name] = function
     return result
 
 
