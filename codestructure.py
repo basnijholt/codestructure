@@ -85,11 +85,11 @@ def extract_function_info(
     result = ExtractedFunctions()
     class_names: list[str] = []
 
-    def get_class_name(node: ast.FunctionDef) -> str | None:
+    def get_class_name(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str | None:
         for cls in class_names[::-1]:
             if any(
                 isinstance(parent, ast.ClassDef) and parent.name == cls
-                for parent in node.parent_list
+                for parent in node.parent_list  # type: ignore[attr-defined, union-attr]
             ):
                 return cls
         return None
@@ -109,7 +109,8 @@ def extract_function_info(
         for arg in node.args.args:
             default_value = None
             if arg.arg in node.args.kw_defaults:
-                default_value = ast.literal_eval(node.args.kw_defaults[arg.arg])
+                expr = node.args.kw_defaults[arg.arg]  # type: ignore[call-overload]
+                default_value = ast.literal_eval(expr)
             param_type = ast.unparse(arg.annotation) if arg.annotation else None
             parameters.append(
                 Parameter(
@@ -139,7 +140,7 @@ def extract_function_info(
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             if any(
                 isinstance(parent, ast.FunctionDef | ast.AsyncFunctionDef)
-                for parent in node.parent_list
+                for parent in node.parent_list  # type: ignore[union-attr]
             ):
                 continue
 
@@ -149,14 +150,14 @@ def extract_function_info(
             decorator_name = get_decorator_name(node)
             parameters = get_parameters(node)
             return_type = ast.unparse(node.returns) if node.returns else None
-            kw = {
-                "docstring": docstring,
-                "decorator": decorator_name,
-                "parameters": parameters,
-                "return_type": return_type,
-            }
 
-            function = Function(signature=function_name, **kw)
+            function = Function(
+                signature=function_name,
+                docstring=docstring,
+                decorator=decorator_name,
+                parameters=parameters,
+                return_type=return_type,
+            )
             if class_name:
                 result.classes[class_name].functions[function_name] = function
             else:
@@ -176,8 +177,8 @@ def add_parent_list(tree: ast.Module) -> None:
     """
     for node in ast.walk(tree):
         for child in ast.iter_child_nodes(node):
-            child.parent_list = [*getattr(node, "parent_list", []), node]
-            add_parent_list(child)
+            child.parent_list = [*getattr(node, "parent_list", []), node]  # type: ignore[attr-defined]
+            add_parent_list(child)  # type: ignore[arg-type]
 
 
 def print_function_info(
