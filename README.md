@@ -12,6 +12,15 @@ It is particularly useful for understanding and documenting complex codebases.
 - Extract decorators and docstrings
 - Display the extracted information in a human-readable format
 
+## :books: Table of Contents
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
 ## 📦 Installation
 
 You can install CodeStructure via pip:
