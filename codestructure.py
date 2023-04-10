@@ -1,10 +1,11 @@
 import argparse
 import ast
 import contextlib
+import subprocess
 import textwrap
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 
 def parse_module_file(file_path: str) -> ast.Module:
@@ -28,23 +29,23 @@ def parse_module_file(file_path: str) -> ast.Module:
 @dataclass
 class Parameter:
     name: str
-    param_type: Optional[str]
-    default_value: Optional[Any]
+    param_type: str | None
+    default_value: Any | None
 
 
 @dataclass
 class Function:
     signature: str
-    docstring: Optional[str]
-    decorator: Optional[str]
+    docstring: str | None
+    decorator: str | None
     parameters: list[Parameter]
-    return_type: Optional[str]
+    return_type: str | None
 
 
 @dataclass
 class Class:
     class_name: str
-    attributes: list[tuple[str, Optional[str]]]
+    attributes: list[tuple[str, str | None]]
     functions: dict[str, Function] = field(default_factory=dict)
 
 
@@ -71,7 +72,7 @@ def extract_function_info(
     result = ExtractedFunctions()
     class_names: list[str] = []
 
-    def get_class_name(node: ast.FunctionDef) -> Optional[str]:
+    def get_class_name(node: ast.FunctionDef) -> str | None:
         for cls in class_names[::-1]:
             if any(
                 isinstance(parent, ast.ClassDef) and parent.name == cls
@@ -81,15 +82,15 @@ def extract_function_info(
         return None
 
     def get_decorator_name(
-        node: Union[ast.FunctionDef, ast.AsyncFunctionDef],
-    ) -> Optional[str]:
+        node: ast.FunctionDef | ast.AsyncFunctionDef,
+    ) -> str | None:
         for decorator in node.decorator_list:
-            if isinstance(decorator, (ast.Name, ast.Attribute)):
+            if isinstance(decorator, ast.Name | ast.Attribute):
                 return ast.unparse(decorator)
         return None
 
     def get_parameters(
-        node: Union[ast.FunctionDef, ast.AsyncFunctionDef],
+        node: ast.FunctionDef | ast.AsyncFunctionDef,
     ) -> list[Parameter]:
         parameters = []
         for arg in node.args.args:
@@ -99,7 +100,9 @@ def extract_function_info(
             param_type = ast.unparse(arg.annotation) if arg.annotation else None
             parameters.append(
                 Parameter(
-                    name=arg.arg, param_type=param_type, default_value=default_value,
+                    name=arg.arg,
+                    param_type=param_type,
+                    default_value=default_value,
                 ),
             )
         return parameters
@@ -120,9 +123,9 @@ def extract_function_info(
                 attributes=class_attributes,
             )
 
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             if any(
-                isinstance(parent, (ast.FunctionDef, ast.AsyncFunctionDef))
+                isinstance(parent, ast.FunctionDef | ast.AsyncFunctionDef)
                 for parent in node.parent_list
             ):
                 continue
@@ -235,6 +238,11 @@ def main() -> None:
 
         pyperclip.copy(output)
     except ImportError:
+        with contextlib.suppress(Exception):
+            process = subprocess.Popen(
+                "pbcopy", env={"LANG": "en_US.UTF-8"}, stdin=subprocess.PIPE,
+            )
+            process.communicate(output.encode("utf-8"))
         pass
 
 
