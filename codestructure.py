@@ -106,10 +106,14 @@ def extract_function_info(
         node: ast.FunctionDef | ast.AsyncFunctionDef,
     ) -> list[Parameter]:
         parameters = []
-        for arg in node.args.args:
+        num_defaults = len(node.args.defaults)
+        num_positional_args = len(node.args.args) - num_defaults
+
+        for i, arg in enumerate(node.args.args):
             default_value = None
-            if arg.arg in node.args.kw_defaults:
-                expr = node.args.kw_defaults[arg.arg]  # type: ignore[call-overload]
+            if i >= num_positional_args:
+                default_index = i - num_positional_args
+                expr = node.args.defaults[default_index]
                 default_value = ast.literal_eval(expr)
             param_type = ast.unparse(arg.annotation) if arg.annotation else None
             parameters.append(
