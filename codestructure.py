@@ -1,5 +1,6 @@
 import argparse
 import ast
+import contextlib
 import textwrap
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -25,11 +26,18 @@ def parse_module_file(file_path: str) -> ast.Module:
 
 
 @dataclass
+class Parameter:
+    name: str
+    param_type: Optional[str]
+    default_value: Optional[Any]
+
+
+@dataclass
 class Function:
     signature: str
     docstring: Optional[str]
     decorator: Optional[str]
-    parameters: list[tuple[str, Optional[str], Optional[Any]]]
+    parameters: list[Parameter]
     return_type: Optional[str]
 
 
@@ -82,14 +90,18 @@ def extract_function_info(
 
     def get_parameters(
         node: Union[ast.FunctionDef, ast.AsyncFunctionDef],
-    ) -> list[tuple[str, Optional[str], Optional[Any]]]:
+    ) -> list[Parameter]:
         parameters = []
         for arg in node.args.args:
             default_value = None
             if arg.arg in node.args.kw_defaults:
                 default_value = ast.literal_eval(node.args.kw_defaults[arg.arg])
             param_type = ast.unparse(arg.annotation) if arg.annotation else None
-            parameters.append((arg.arg, param_type, default_value))
+            parameters.append(
+                Parameter(
+                    name=arg.arg, param_type=param_type, default_value=default_value,
+                ),
+            )
         return parameters
 
     for node in ast.walk(tree):
@@ -168,10 +180,12 @@ def print_function_info(function_info: ExtractedFunctions) -> None:
         signature = f"{indent}def {function.signature}("
 
         params = []
-        for param, param_type, default in function.parameters:
-            param_str = f"{param}: {param_type}" if param_type else param
-            if default is not None:
-                param_str += f"={default}"
+        for param in function.parameters:
+            param_str = (
+                f"{param.name}: {param.param_type}" if param.param_type else param.name
+            )
+            if param.default_value is not None:
+                param_str += f"={param.default_value}"
             params.append(param_str)
 
         signature += ", ".join(params)
@@ -210,7 +224,18 @@ def main() -> None:
     tree = parse_module_file(args.module_file_path)
     add_parent_list(tree)
     function_info = extract_function_info(tree)
-    print_function_info(function_info)
+    import io
+
+    with io.StringIO() as string, contextlib.redirect_stdout(string):
+        print_function_info(function_info)
+        output = string.getvalue()
+    print(output)
+    try:
+        import pyperclip
+
+        pyperclip.copy(output)
+    except ImportError:
+        pass
 
 
 if __name__ == "__main__":
