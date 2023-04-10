@@ -1,9 +1,9 @@
-# 🏗️ CodeStructure
+# :building_construction: CodeStructure
 
 CodeStructure is a Python package that analyzes the structure of a Python file and extracts information about its classes, functions, and their associated attributes.
 It is particularly useful for understanding and documenting complex codebases.
 
-## 🌟 Features
+## :star: Features
 
 - Extract class and function signatures
 - Extract class attributes
@@ -26,7 +26,7 @@ It is particularly useful for understanding and documenting complex codebases.
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
-## 📦 Installation
+## :package: Installation
 
 You can install CodeStructure via pip:
 
@@ -34,7 +34,7 @@ You can install CodeStructure via pip:
 pip install codestructure
 ```
 
-## 📚 Usage
+## :book: Usage
 
 To use CodeStructure, simply run the script with the path to the Python file you want to analyze:
 
@@ -75,7 +75,7 @@ options:
 <!-- OUTPUT:END -->
 
 
-## 📝 Example
+## :memo: Example
 
 Given a Python file with the following content:
 
@@ -106,10 +106,10 @@ def my_function(arg2: float) -> None:
     ...
 ```
 
-## 👥 Contributing
+## :busts_in_silhouette: Contributing
 
 We welcome contributions to CodeStructure! If you find a bug or have a feature request, please create an issue on the [GitHub repository](https://github.com/basnijholt/codestructure). If you would like to contribute code, please fork the repository and submit a pull request.
 
-## 📄 License
+## :page_with_curl: License
 
 CodeStructure is released under the Apache 2.0 License. For more information, please see the [LICENSE](LICENSE) file.
