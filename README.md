@@ -17,11 +17,11 @@ It is particularly useful for understanding and documenting complex codebases.
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [📦 Installation](#-installation)
-- [📚 Usage](#-usage)
-- [📝 Example](#-example)
-- [👥 Contributing](#-contributing)
-- [📄 License](#-license)
+- [:package: Installation](#package-installation)
+- [:book: Usage](#book-usage)
+- [:memo: Example](#memo-example)
+- [:busts_in_silhouette: Contributing](#busts_in_silhouette-contributing)
+- [:page_with_curl: License](#page_with_curl-license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
