@@ -39,10 +39,13 @@ class MyClass:
     my_attr: str
 
     def my_method(self, arg1: int) -> bool:
-        pass
+        """My docstring."""
+        a = 1 + 1
+        ...
 
 def my_function(arg2: float) -> None:
-    pass
+    arg2 = arg2 + 1
+    ...
 ```
 
 CodeStructure will output:
@@ -52,7 +55,7 @@ class MyClass:
     my_attr: str
 
     def my_method(self, arg1: int) -> bool:
-        ...
+        """My docstring."""
 
 def my_function(arg2: float) -> None:
     ...
