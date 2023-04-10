@@ -251,3 +251,50 @@ def test_main() -> None:
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
+
+
+def test_extract_function_info_with_decorator() -> None:
+    """Test extract_function_info with a decorated function."""
+    source_code = textwrap.dedent(
+        """
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+            return wrapper
+
+        @decorator
+        def example_function(a: int, b: int = 2) -> int:
+            \"\"\"An example function.\"\"\"
+            return a + b
+        """,
+    )
+
+    ast_module = ast.parse(source_code)
+    add_parent_list(ast_module)
+    extracted_functions = extract_function_info(ast_module)
+
+    expected_functions = ExtractedFunctions(
+        functions={
+            "decorator": Function(
+                signature="decorator",
+                docstring=None,
+                decorator=None,
+                parameters=[
+                    Parameter("func", None, None),
+                ],
+                return_type=None,
+            ),
+            "example_function": Function(
+                signature="example_function",
+                docstring="An example function.",
+                decorator="decorator",
+                parameters=[
+                    Parameter("a", "int", None),
+                    Parameter("b", "int", 2),
+                ],
+                return_type="int",
+            ),
+        },
+    )
+
+    assert extracted_functions == expected_functions

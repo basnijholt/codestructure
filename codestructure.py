@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 
-def parse_module_file(file_path: str) -> ast.Module:
+def parse_module_file(file_path: str) -> ast.Module:  # pragma: no cover
     """Parse the source code of a Python module.
 
     Parameters
@@ -257,7 +257,7 @@ def main() -> None:
         print_function_info(function_info, with_private=not args.no_private)
         output = string.getvalue()
     print(output)
-    try:
+    try:  # pragma: no cover
         import pyperclip
 
         pyperclip.copy(output)
