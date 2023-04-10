@@ -1,20 +1,49 @@
 import argparse
 import ast
 import textwrap
+from pathlib import Path
+from typing import Any, Optional, Union
 
 
-def parse_module_file(file_path):
-    with open(file_path) as f:
+def parse_module_file(file_path: str) -> ast.Module:
+    """Parse the source code of a Python module.
+
+    Parameters
+    ----------
+    file_path
+        The path to the Python module file.
+
+    Returns
+    -------
+    The AST representation of the module.
+    """
+    with Path(file_path).open() as f:
         source_code = f.read()
 
     return ast.parse(source_code)
 
 
-def extract_function_info(tree):
-    result = {"classes": {}, "functions": {}}
-    class_names = []
+def extract_function_info(
+    tree: ast.Module,
+) -> dict[str, Union[dict[str, Any], dict[str, dict[str, Any]]]]:
+    """Extract information about classes and functions from the AST of a Python module.
 
-    def get_class_name(node):
+    Parameters
+    ----------
+    tree
+        The AST representation of the module.
+
+    Returns
+    -------
+    A dictionary containing information about the classes and functions in the module.
+    """
+    result: dict[str, Union[dict[str, Any], dict[str, dict[str, Any]]]] = {
+        "classes": {},
+        "functions": {},
+    }
+    class_names: list[str] = []
+
+    def get_class_name(node: ast.FunctionDef) -> Optional[str]:
         for cls in class_names[::-1]:
             if any(
                 isinstance(parent, ast.ClassDef) and parent.name == cls
@@ -23,13 +52,17 @@ def extract_function_info(tree):
                 return cls
         return None
 
-    def get_decorator_name(node):
+    def get_decorator_name(
+        node: Union[ast.FunctionDef, ast.AsyncFunctionDef],
+    ) -> Optional[str]:
         for decorator in node.decorator_list:
             if isinstance(decorator, (ast.Name, ast.Attribute)):
                 return ast.unparse(decorator)
         return None
 
-    def get_parameters(node):
+    def get_parameters(
+        node: Union[ast.FunctionDef, ast.AsyncFunctionDef],
+    ) -> list[tuple[str, Optional[str], Optional[Any]]]:
         parameters = []
         for arg in node.args.args:
             default_value = None
@@ -91,15 +124,32 @@ def extract_function_info(tree):
     return result
 
 
-def add_parent_list(tree):
+def add_parent_list(tree: ast.Module) -> None:
+    """Add the parent list attribute to each node in the AST.
+
+    This attribute is a list of all the ancestors of the node.
+
+    Parameters
+    ----------
+    tree
+        The AST representation of the module.
+    """
     for node in ast.walk(tree):
         for child in ast.iter_child_nodes(node):
             child.parent_list = [*getattr(node, "parent_list", []), node]
             add_parent_list(child)
 
 
-def print_function_info(function_info):
-    def format_function(function_name, info, indent_level):
+def print_function_info(
+    function_info: dict[str, Union[dict[str, Any], dict[str, dict[str, Any]]]],
+) -> None:
+    """Print the information about classes and functions in a Python module."""
+
+    def format_function(
+        function_name: str,
+        info: dict[str, Any],
+        indent_level: int,
+    ) -> str:
         indent = " " * indent_level
         decorator = f'{indent}@{info["decorator"]}\n' if info["decorator"] else ""
         signature = f"{indent}def {function_name}("
@@ -113,7 +163,7 @@ def print_function_info(function_info):
 
         signature += ", ".join(params)
         signature += f") -> {info['return_type'] if info['return_type'] else 'None'}:"
-        indent_docs = indent + ("    ")
+        indent_docs = indent + (" " * 4)
         docstring = textwrap.indent(
             f'"""{info["docstring"]}"""' if info["docstring"] else "...",
             indent_docs,
@@ -136,7 +186,8 @@ def print_function_info(function_info):
         print()
 
 
-def main():
+def main() -> None:
+    """Parse the command line arguments and print the function info."""
     parser = argparse.ArgumentParser(
         description="Analyze the code structure of a Python file.",
     )
