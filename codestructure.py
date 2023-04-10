@@ -1,6 +1,7 @@
 import argparse
 import ast
 import textwrap
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional, Union
 
@@ -21,6 +22,8 @@ def parse_module_file(file_path: str) -> ast.Module:
         source_code = f.read()
 
     return ast.parse(source_code)
+
+
 @dataclass
 class Function:
     signature: str
@@ -48,11 +51,12 @@ def extract_function_info(
 ) -> ExtractedFunctions:
     """Extract information about classes and functions from the AST of a Python module.
 
-    Args:
-    ----
-        tree: The AST representation of the module.
+    Parameters
+    ----------
+    tree
+        The AST representation of the module.
 
-    Returns:
+    Returns
     -------
         An ExtractedFunctions object containing information about the classes and functions in the module.
     """
@@ -155,49 +159,43 @@ def add_parent_list(tree: ast.Module) -> None:
             add_parent_list(child)
 
 
-def print_function_info(
-    function_info: dict[str, Union[dict[str, Any], dict[str, dict[str, Any]]]],
-) -> None:
+def print_function_info(function_info: ExtractedFunctions) -> None:
     """Print the information about classes and functions in a Python module."""
 
-    def format_function(
-        function_name: str,
-        info: dict[str, Any],
-        indent_level: int,
-    ) -> str:
+    def format_function(function: Function, indent_level: int) -> str:
         indent = " " * indent_level
-        decorator = f'{indent}@{info["decorator"]}\n' if info["decorator"] else ""
-        signature = f"{indent}def {function_name}("
+        decorator = f"{indent}@{function.decorator}\n" if function.decorator else ""
+        signature = f"{indent}def {function.signature}("
 
         params = []
-        for param, param_type, default in info["parameters"]:
+        for param, param_type, default in function.parameters:
             param_str = f"{param}: {param_type}" if param_type else param
             if default is not None:
                 param_str += f"={default}"
             params.append(param_str)
 
         signature += ", ".join(params)
-        signature += f") -> {info['return_type'] if info['return_type'] else 'None'}:"
+        signature += f") -> {function.return_type if function.return_type else 'None'}:"
         indent_docs = indent + (" " * 4)
         docstring = textwrap.indent(
-            f'"""{info["docstring"]}"""' if info["docstring"] else "...",
+            f'"""{function.docstring}"""' if function.docstring else "...",
             indent_docs,
         )
 
         return f"{decorator}{signature}\n{docstring}\n"
 
-    for class_name, class_info in function_info["classes"].items():
+    for class_name, class_info in function_info.classes.items():
         print(f"class {class_name}:")
-        for attr_name, attr_type in class_info.get("attributes", []):
+        for attr_name, attr_type in class_info.attributes:
             print(f"    {attr_name}: {attr_type}" if attr_type else f"    {attr_name}")
 
-        for function_name, info in class_info.get("functions", {}).items():
-            print(format_function(function_name, info, 4))
+        for _function_name, function in class_info.functions.items():
+            print(format_function(function, 4))
         print()
 
-    for name, info in function_info["functions"].items():
-        method_name = name.split(".")[-1]
-        print(format_function(method_name, info, 0))
+    for name, function in function_info.functions.items():
+        name.split(".")[-1]
+        print(format_function(function, 0))
         print()
 
 
