@@ -203,7 +203,7 @@ def print_function_info(
                 f"{param.name}: {param.param_type}" if param.param_type else param.name
             )
             if param.default_value is not None:
-                param_str += f"={param.default_value}"
+                param_str += f" = {param.default_value}"
             params.append(param_str)
 
         signature += ", ".join(params)
@@ -221,14 +221,16 @@ def print_function_info(
         for attr_name, attr_type in class_info.attributes:
             print(f"    {attr_name}: {attr_type}" if attr_type else f"    {attr_name}")
 
-        for _function_name, function in class_info.functions.items():
-            print(format_function(function, 4))
+        for method_name, method in class_info.functions.items():
+            if not with_private and _is_private(method_name):
+                continue
+
+            print(format_function(method, 4))
         print()
 
-    for name, function in function_info.functions.items():
-        if not with_private and _is_private(name):
+    for function_name, function in function_info.functions.items():
+        if not with_private and _is_private(function_name):
             continue
-        name.split(".")[-1]
         print(format_function(function, 0))
         print()
 
