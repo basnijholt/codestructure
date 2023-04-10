@@ -1,12 +1,14 @@
+import argparse
 import ast
 import textwrap
-import argparse
+
 
 def parse_module_file(file_path):
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         source_code = f.read()
 
     return ast.parse(source_code)
+
 
 def extract_function_info(tree):
     result = {"classes": {}, "functions": {}}
@@ -75,7 +77,8 @@ def extract_function_info(tree):
 
             if class_name:
                 class_functions = result["classes"][class_name].setdefault(
-                    "functions", {}
+                    "functions",
+                    {},
                 )
                 class_functions[function_name] = {
                     "signature": f"{class_name}.{function_name}",
@@ -87,11 +90,13 @@ def extract_function_info(tree):
 
     return result
 
+
 def add_parent_list(tree):
     for node in ast.walk(tree):
         for child in ast.iter_child_nodes(node):
-            child.parent_list = getattr(node, "parent_list", []) + [node]
+            child.parent_list = [*getattr(node, "parent_list", []), node]
             add_parent_list(child)
+
 
 def print_function_info(function_info):
     def format_function(function_name, info, indent_level):
@@ -110,7 +115,8 @@ def print_function_info(function_info):
         signature += f") -> {info['return_type'] if info['return_type'] else 'None'}:"
         indent_docs = indent + ("    ")
         docstring = textwrap.indent(
-            f'"""{info["docstring"]}"""' if info["docstring"] else "...", indent_docs
+            f'"""{info["docstring"]}"""' if info["docstring"] else "...",
+            indent_docs,
         )
 
         return f"{decorator}{signature}\n{docstring}\n"
@@ -129,8 +135,11 @@ def print_function_info(function_info):
         print(format_function(method_name, info, 0))
         print()
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Analyze the code structure of a Python file.")
+    parser = argparse.ArgumentParser(
+        description="Analyze the code structure of a Python file.",
+    )
     parser.add_argument("module_file_path", type=str, help="Path to the Python file.")
     args = parser.parse_args()
 
@@ -139,6 +148,6 @@ def main():
     function_info = extract_function_info(tree)
     print_function_info(function_info)
 
+
 if __name__ == "__main__":
     main()
-
