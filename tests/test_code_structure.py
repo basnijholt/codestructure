@@ -13,19 +13,20 @@ from codestructure import (
     add_parent_list,
     extract_function_info,
     main,
+    parse_module,
     print_function_info,
 )
 
 
-def test_parse_module_file() -> None:
-    """Test parse_module_file."""
+def test_parse_module() -> None:
+    """Test parse_module."""
     source_code = textwrap.dedent(
         """
         def example_function():
             pass
         """,
     )
-    ast_module = ast.parse(source_code)
+    ast_module = parse_module(source_code=source_code)
     assert isinstance(ast_module, ast.Module)
 
 
@@ -38,8 +39,7 @@ def test_add_parent_list() -> None:
                 pass
         """,
     )
-    ast_module = ast.parse(source_code)
-    add_parent_list(ast_module)
+    ast_module = parse_module(source_code=source_code)
     example_class_node = None
     example_method_node = None
 
@@ -76,33 +76,39 @@ def test_extract_function_info() -> None:
     extracted_functions = extract_function_info(ast_module)
 
     expected_functions = ExtractedFunctions(
-        classes={
-            "ExampleClass": Class(
-                class_name="ExampleClass",
-                attributes=[("x", "int"), ("y", "int")],
-                functions={
-                    "example_method": Function(
-                        signature="example_method",
-                        docstring="An example method.",
-                        decorator=None,
-                        parameters=[Parameter("self", None, None)],
-                        return_type="None",
-                    ),
-                },
+        classes=[
+            (
+                "ExampleClass",
+                Class(
+                    class_name="ExampleClass",
+                    attributes=[("x", "int"), ("y", "int")],
+                    functions={
+                        "example_method": Function(
+                            signature="example_method",
+                            docstring="An example method.",
+                            decorator=None,
+                            parameters=[Parameter("self", None, None)],
+                            return_type="None",
+                        ),
+                    },
+                ),
             ),
-        },
-        functions={
-            "example_function": Function(
-                signature="example_function",
-                docstring="An example function.",
-                decorator=None,
-                parameters=[
-                    Parameter("a", "int", None),
-                    Parameter("b", "int", 2),
-                ],
-                return_type="int",
+        ],
+        functions=[
+            (
+                "example_function",
+                Function(
+                    signature="example_function",
+                    docstring="An example function.",
+                    decorator=None,
+                    parameters=[
+                        Parameter("a", "int", None),
+                        Parameter("b", "int", 2),
+                    ],
+                    return_type="int",
+                ),
             ),
-        },
+        ],
     )
 
     assert extracted_functions == expected_functions
@@ -111,33 +117,39 @@ def test_extract_function_info() -> None:
 def test_print_function_info_with_private() -> None:
     """Test print_function_info with private functions included."""
     extracted_functions = ExtractedFunctions(
-        classes={
-            "ExampleClass": Class(
-                class_name="ExampleClass",
-                attributes=[("x", "int"), ("y", "int")],
-                functions={
-                    "_example_private_method": Function(
-                        signature="_example_private_method",
-                        docstring="An example private method.",
-                        decorator=None,
-                        parameters=[Parameter("self", None, None)],
-                        return_type="None",
-                    ),
-                },
+        classes=[
+            (
+                "ExampleClass",
+                Class(
+                    class_name="ExampleClass",
+                    attributes=[("x", "int"), ("y", "int")],
+                    functions={
+                        "_example_private_method": Function(
+                            signature="_example_private_method",
+                            docstring="An example private method.",
+                            decorator=None,
+                            parameters=[Parameter("self", None, None)],
+                            return_type="None",
+                        ),
+                    },
+                ),
             ),
-        },
-        functions={
-            "_example_private_function": Function(
-                signature="_example_private_function",
-                docstring="An example private function.",
-                decorator=None,
-                parameters=[
-                    Parameter("a", "int", None),
-                    Parameter("b", "int", 2),
-                ],
-                return_type="int",
+        ],
+        functions=[
+            (
+                "_example_private_function",
+                Function(
+                    signature="_example_private_function",
+                    docstring="An example private function.",
+                    decorator=None,
+                    parameters=[
+                        Parameter("a", "int", None),
+                        Parameter("b", "int", 2),
+                    ],
+                    return_type="int",
+                ),
             ),
-        },
+        ],
     )
 
     expected_output = textwrap.dedent(
@@ -164,33 +176,39 @@ def test_print_function_info_with_private() -> None:
 def test_print_function_info_without_private() -> None:
     """Test print_function_info without private functions."""
     extracted_functions = ExtractedFunctions(
-        classes={
-            "ExampleClass": Class(
-                class_name="ExampleClass",
-                attributes=[("x", "int"), ("y", "int")],
-                functions={
-                    "_example_private_method": Function(
-                        signature="_example_private_method",
-                        docstring="An example private method.",
-                        decorator=None,
-                        parameters=[Parameter("self", None, None)],
-                        return_type="None",
-                    ),
-                },
+        classes=[
+            (
+                "ExampleClass",
+                Class(
+                    class_name="ExampleClass",
+                    attributes=[("x", "int"), ("y", "int")],
+                    functions={
+                        "_example_private_method": Function(
+                            signature="_example_private_method",
+                            docstring="An example private method.",
+                            decorator=None,
+                            parameters=[Parameter("self", None, None)],
+                            return_type="None",
+                        ),
+                    },
+                ),
             ),
-        },
-        functions={
-            "_example_private_function": Function(
-                signature="_example_private_function",
-                docstring="An example private function.",
-                decorator=None,
-                parameters=[
-                    Parameter("a", "int", None),
-                    Parameter("b", "int", 2),
-                ],
-                return_type="int",
+        ],
+        functions=[
+            (
+                "_example_private_function",
+                Function(
+                    signature="_example_private_function",
+                    docstring="An example private function.",
+                    decorator=None,
+                    parameters=[
+                        Parameter("a", "int", None),
+                        Parameter("b", "int", 2),
+                    ],
+                    return_type="int",
+                ),
             ),
-        },
+        ],
     )
 
     expected_output = textwrap.dedent(
@@ -230,7 +248,7 @@ def test_main() -> None:
         f.write(source_code)
 
     expected_output = textwrap.dedent(
-        """\
+        """
         class ExampleClass:
             x: int
             y: int
@@ -243,7 +261,7 @@ def test_main() -> None:
         """,
     )
 
-    args = ["codestructure", module_file_path, "--no-private"]
+    args = ["codestructure", module_file_path, "--no-private", "--no-rich", "--no-copy"]
     with mock.patch("sys.argv", args), StringIO() as string, contextlib.redirect_stdout(
         string,
     ):
@@ -274,27 +292,65 @@ def test_extract_function_info_with_decorator() -> None:
     extracted_functions = extract_function_info(ast_module)
 
     expected_functions = ExtractedFunctions(
-        functions={
-            "decorator": Function(
-                signature="decorator",
-                docstring=None,
-                decorator=None,
-                parameters=[
-                    Parameter("func", None, None),
-                ],
-                return_type=None,
+        functions=[
+            (
+                "decorator",
+                Function(
+                    signature="decorator",
+                    docstring=None,
+                    decorator=None,
+                    parameters=[
+                        Parameter("func", None, None),
+                    ],
+                    return_type=None,
+                ),
             ),
-            "example_function": Function(
-                signature="example_function",
-                docstring="An example function.",
-                decorator="decorator",
-                parameters=[
-                    Parameter("a", "int", None),
-                    Parameter("b", "int", 2),
-                ],
-                return_type="int",
+            (
+                "example_function",
+                Function(
+                    signature="example_function",
+                    docstring="An example function.",
+                    decorator="decorator",
+                    parameters=[
+                        Parameter("a", "int", None),
+                        Parameter("b", "int", 2),
+                    ],
+                    return_type="int",
+                ),
             ),
-        },
+        ],
     )
 
     assert extracted_functions == expected_functions
+
+
+def test_extract_function_info_with_value_error_in_literal_eval() -> None:
+    """Test extract_function_info with a ValueError in ast.literal_eval."""
+    source_code = textwrap.dedent(
+        """
+        custom_default_value = 1
+        def example_function(a: int = custom_default_value):
+            pass
+        """,
+    )
+    expected_functions = ExtractedFunctions(
+        functions=[
+            (
+                "example_function",
+                Function(
+                    signature="example_function",
+                    docstring=None,
+                    decorator=None,
+                    parameters=[
+                        Parameter("a", "int", "custom_default_value"),
+                    ],
+                    return_type=None,
+                ),
+            ),
+        ],
+    )
+
+    tree = parse_module(source_code=source_code)
+    function_info = extract_function_info(tree)
+
+    assert function_info == expected_functions

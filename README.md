@@ -1,7 +1,7 @@
 # :building_construction: CodeStructure
 
 CodeStructure is a Python package that analyzes the structure of a Python file and extracts information about its classes, functions, and their associated attributes.
-It is particularly useful for understanding and documenting complex codebases.
+It is particularly useful for understanding and documenting complex codebases and writing design docs.
 
 ## :star: Features
 

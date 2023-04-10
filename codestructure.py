@@ -2,29 +2,46 @@
 import argparse
 import ast
 import contextlib
-import subprocess
+import io
 import textwrap
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+import pyperclip
+import rich
+from rich.console import Console
+from rich.syntax import Syntax
 
-def parse_module_file(file_path: str) -> ast.Module:  # pragma: no cover
+
+def parse_module(
+    file_path: str | Path | None = None,
+    source_code: str | None = None,
+) -> ast.Module:
     """Parse the source code of a Python module.
 
     Parameters
     ----------
     file_path
         The path to the Python module file.
+    source_code
+        The source code of the Python module as a string.
 
     Returns
     -------
     The AST representation of the module.
     """
-    with Path(file_path).open() as f:
-        source_code = f.read()
+    if not file_path and not source_code:  # pragma: no cover
+        msg = "Either 'file_path' or 'source_code' must be provided."
+        raise ValueError(msg)
 
-    return ast.parse(source_code)
+    if file_path:
+        with Path(file_path).open() as f:
+            source_code = f.read()
+    assert source_code is not None
+    tree = ast.parse(source_code)
+    add_parent_list(tree)
+    return tree
 
 
 @dataclass
@@ -60,8 +77,8 @@ class Class:
 class ExtractedFunctions:
     """The information about classes and functions in a Python module."""
 
-    classes: dict[str, Class] = field(default_factory=dict)
-    functions: dict[str, Function] = field(default_factory=dict)
+    classes: list[tuple[str, Class]] = field(default_factory=list)
+    functions: list[tuple[str, Function]] = field(default_factory=list)
 
 
 def _is_private(name: str) -> bool:
@@ -114,7 +131,10 @@ def extract_function_info(
             if i >= num_positional_args:
                 default_index = i - num_positional_args
                 expr = node.args.defaults[default_index]
-                default_value = ast.literal_eval(expr)
+                try:
+                    default_value = ast.literal_eval(expr)
+                except ValueError:
+                    default_value = ast.unparse(expr)
             param_type = ast.unparse(arg.annotation) if arg.annotation else None
             parameters.append(
                 Parameter(
@@ -136,9 +156,8 @@ def extract_function_info(
                 for stmt in node.body
                 if isinstance(stmt, ast.AnnAssign) and isinstance(stmt.target, ast.Name)
             ]
-            result.classes[node.name] = Class(
-                class_name=node.name,
-                attributes=class_attributes,
+            result.classes.append(
+                (node.name, Class(class_name=node.name, attributes=class_attributes)),
             )
 
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
@@ -163,9 +182,14 @@ def extract_function_info(
                 return_type=return_type,
             )
             if class_name:
-                result.classes[class_name].functions[function_name] = function
+                class_index = next(
+                    i
+                    for i, (cls_name, _) in enumerate(result.classes)
+                    if cls_name == class_name
+                )
+                result.classes[class_index][1].functions[function_name] = function
             else:
-                result.functions[function_name] = function
+                result.functions.append((function_name, function))
     return result
 
 
@@ -216,7 +240,7 @@ def print_function_info(
 
         return f"{decorator}{signature}\n{docstring}\n"
 
-    for class_name, class_info in function_info.classes.items():
+    for class_name, class_info in function_info.classes:
         print(f"class {class_name}:")
         for attr_name, attr_type in class_info.attributes:
             print(f"    {attr_name}: {attr_type}" if attr_type else f"    {attr_name}")
@@ -228,11 +252,30 @@ def print_function_info(
             print(format_function(method, 4))
         print()
 
-    for function_name, function in function_info.functions.items():
+    for function_name, function in function_info.functions:
         if not with_private and _is_private(function_name):
             continue
         print(format_function(function, 0))
         print()
+
+
+def print_syntax_with_rich(
+    s: str,
+    *,
+    line_numbers: bool = False,
+) -> None:  # pragma: no cover
+    """Pretty-print Python code using the rich library.
+
+    Parameters
+    ----------
+    s
+        A string containing Python code.
+    line_numbers
+        Whether to print line numbers.
+    """
+    syntax = Syntax(s, "python", theme="monokai", line_numbers=line_numbers)
+    console = Console()
+    console.print(syntax)
 
 
 def main() -> None:
@@ -246,30 +289,47 @@ def main() -> None:
         action="store_true",
         help="Do not print private functions.",
     )
+    parser.add_argument(
+        "--no-copy",
+        action="store_true",
+        help="Do not copy the output to the clipboard.",
+    )
+    parser.add_argument(
+        "--backticks",
+        action="store_true",
+        help="Use backticks for code blocks.",
+    )
+    parser.add_argument(
+        "--no-rich",
+        action="store_true",
+        help="Do not use rich to print the output.",
+    )
+    parser.add_argument(
+        "--line-numbers",
+        action="store_true",
+        help="Print line numbers for the code blocks.",
+    )
     args = parser.parse_args()
 
-    tree = parse_module_file(args.module_file_path)
-    add_parent_list(tree)
+    tree = parse_module(args.module_file_path)
     function_info = extract_function_info(tree)
-    import io
 
     with io.StringIO() as string, contextlib.redirect_stdout(string):
         print_function_info(function_info, with_private=not args.no_private)
         output = string.getvalue()
-    print(output)
-    try:  # pragma: no cover
-        import pyperclip
 
-        pyperclip.copy(output)
-    except ImportError:
-        with contextlib.suppress(Exception):
-            process = subprocess.Popen(
-                "pbcopy",
-                env={"LANG": "en_US.UTF-8"},
-                stdin=subprocess.PIPE,
-            )
-            process.communicate(output.encode("utf-8"))
-        pass
+    if args.backticks:  # pragma: no cover
+        output = "```python\n" + output + "```"
+    if args.no_rich:
+        print(output)
+    else:  # pragma: no cover
+        print_syntax_with_rich(output, line_numbers=args.line_numbers)
+
+    if not args.no_copy:  # pragma: no cover
+        try:
+            pyperclip.copy(output)
+        except pyperclip.PyperclipException:
+            rich.print("[red bold]⚠️ Could not copy to clipboard.[/]")
 
 
 if __name__ == "__main__":

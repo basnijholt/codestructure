@@ -7,7 +7,7 @@ name = "codestructure"
 description = "CodeStructure is a Python package that analyzes the structure of a Python file and extracts information about its classes, functions, and their associated attributes."
 dynamic = ["version"]
 authors = [{ name = "Bas Nijholt", email = "bas@nijho.lt" }]
-dependencies = []
+dependencies = ["pyperclip", "rich"]
 requires-python = ">=3.10"
 
 [project.readme]
