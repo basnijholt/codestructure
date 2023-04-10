@@ -1,3 +1,4 @@
+"""CodeStructure: A Python package for extracting code structure information from Python modules."""
 import argparse
 import ast
 import contextlib
@@ -28,6 +29,8 @@ def parse_module_file(file_path: str) -> ast.Module:
 
 @dataclass
 class Parameter:
+    """A function parameter."""
+
     name: str
     param_type: str | None
     default_value: Any | None
@@ -35,6 +38,8 @@ class Parameter:
 
 @dataclass
 class Function:
+    """A function."""
+
     signature: str
     docstring: str | None
     decorator: str | None
@@ -44,6 +49,8 @@ class Function:
 
 @dataclass
 class Class:
+    """A class."""
+
     class_name: str
     attributes: list[tuple[str, str | None]]
     functions: dict[str, Function] = field(default_factory=dict)
@@ -51,8 +58,14 @@ class Class:
 
 @dataclass
 class ExtractedFunctions:
+    """The information about classes and functions in a Python module."""
+
     classes: dict[str, Class] = field(default_factory=dict)
     functions: dict[str, Function] = field(default_factory=dict)
+
+
+def _is_private(name: str) -> bool:
+    return name.startswith("_")
 
 
 def extract_function_info(
@@ -143,17 +156,10 @@ def extract_function_info(
                 "return_type": return_type,
             }
 
+            function = Function(signature=function_name, **kw)
             if class_name:
-                function = Function(
-                    signature=f"{class_name}.{function_name}",
-                    **kw,
-                )
                 result.classes[class_name].functions[function_name] = function
             else:
-                function = Function(
-                    signature=function_name,
-                    **kw,
-                )
                 result.functions[function_name] = function
     return result
 
@@ -174,7 +180,11 @@ def add_parent_list(tree: ast.Module) -> None:
             add_parent_list(child)
 
 
-def print_function_info(function_info: ExtractedFunctions) -> None:
+def print_function_info(
+    function_info: ExtractedFunctions,
+    *,
+    with_private: bool = True,
+) -> None:
     """Print the information about classes and functions in a Python module."""
 
     def format_function(function: Function, indent_level: int) -> str:
@@ -211,6 +221,8 @@ def print_function_info(function_info: ExtractedFunctions) -> None:
         print()
 
     for name, function in function_info.functions.items():
+        if not with_private and _is_private(name):
+            continue
         name.split(".")[-1]
         print(format_function(function, 0))
         print()
@@ -222,6 +234,11 @@ def main() -> None:
         description="Analyze the code structure of a Python file.",
     )
     parser.add_argument("module_file_path", type=str, help="Path to the Python file.")
+    parser.add_argument(
+        "--no-private",
+        action="store_true",
+        help="Do not print private functions.",
+    )
     args = parser.parse_args()
 
     tree = parse_module_file(args.module_file_path)
@@ -230,7 +247,7 @@ def main() -> None:
     import io
 
     with io.StringIO() as string, contextlib.redirect_stdout(string):
-        print_function_info(function_info)
+        print_function_info(function_info, with_private=not args.no_private)
         output = string.getvalue()
     print(output)
     try:
@@ -240,7 +257,9 @@ def main() -> None:
     except ImportError:
         with contextlib.suppress(Exception):
             process = subprocess.Popen(
-                "pbcopy", env={"LANG": "en_US.UTF-8"}, stdin=subprocess.PIPE,
+                "pbcopy",
+                env={"LANG": "en_US.UTF-8"},
+                stdin=subprocess.PIPE,
             )
             process.communicate(output.encode("utf-8"))
         pass
