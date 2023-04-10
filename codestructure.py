@@ -1,16 +1,12 @@
-module_file_path = "codestructure.py"
 import ast
 import textwrap
-import textwrap
-import textwrap
-
+import argparse
 
 def parse_module_file(file_path):
     with open(file_path, "r") as f:
         source_code = f.read()
 
     return ast.parse(source_code)
-
 
 def extract_function_info(tree):
     result = {"classes": {}, "functions": {}}
@@ -91,15 +87,11 @@ def extract_function_info(tree):
 
     return result
 
-
 def add_parent_list(tree):
     for node in ast.walk(tree):
         for child in ast.iter_child_nodes(node):
             child.parent_list = getattr(node, "parent_list", []) + [node]
             add_parent_list(child)
-
-
-
 
 def print_function_info(function_info):
     def format_function(function_name, info, indent_level):
@@ -137,11 +129,16 @@ def print_function_info(function_info):
         print(format_function(method_name, info, 0))
         print()
 
+def main():
+    parser = argparse.ArgumentParser(description="Analyze the code structure of a Python file.")
+    parser.add_argument("module_file_path", type=str, help="Path to the Python file.")
+    args = parser.parse_args()
 
-# module_file_path = "path/to/your/module.py"
-tree = parse_module_file(module_file_path)
-add_parent_list(tree)
-function_info = extract_function_info(tree)
-# function_info['functions']
-print_function_info(function_info)
-# function_info
+    tree = parse_module_file(args.module_file_path)
+    add_parent_list(tree)
+    function_info = extract_function_info(tree)
+    print_function_info(function_info)
+
+if __name__ == "__main__":
+    main()
+
