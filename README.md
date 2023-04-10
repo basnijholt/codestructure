@@ -39,6 +39,16 @@ codestructure path/to/your/python_file.py
 
 The script will output the analyzed code structure and copy it to the clipboard if the `pyperclip` package is installed.
 
+Run the script with the `--help` flag to see all available options:
+
+```bash markdown-code-runner
+codestructure --help
+```
+Which should output:
+
+<!-- OUTPUT:START -->
+<!-- OUTPUT:END -->
+
 ## 📝 Example
 
 Given a Python file with the following content:
