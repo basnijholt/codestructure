@@ -4,11 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "codestructure"
-description = "..."
+description = "CodeStructure is a Python package that analyzes the structure of a Python file and extracts information about its classes, functions, and their associated attributes."
 dynamic = ["version"]
 authors = [{ name = "Bas Nijholt", email = "bas@nijho.lt" }]
-dependencies = [
-]
+dependencies = []
 requires-python = ">=3.10"
 
 [project.readme]
@@ -19,9 +18,8 @@ content-type = "text/markdown"
 Homepage = "https://github.com/basnijholt/codestructure"
 
 [project.optional-dependencies]
-test = ["pytest", "pre-commit", "pytest-asyncio", "coverage", "pytest-cov"]
+test = ["pytest", "pre-commit", "coverage", "pytest-cov"]
 docs = ["pandas", "tabulate", "tqdm"]
-colormap = ["matplotlib"]
 
 [project.scripts]
 codestructure = "codestructure:main"
@@ -51,7 +49,7 @@ line_length = 88
 
 [tool.ruff]
 line-length = 150
-target-version = "py39"
+target-version = "py310"
 select = ["ALL"]
 ignore = [
     "T20",     # flake8-print
