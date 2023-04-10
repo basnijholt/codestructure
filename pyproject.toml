@@ -33,7 +33,6 @@ addopts = """
     --cov-report term
     --cov-report html
     --cov-fail-under=70
-    --asyncio-mode=auto
 """
 
 [tool.coverage.report]
