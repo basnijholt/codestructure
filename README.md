@@ -47,6 +47,7 @@ codestructure --help
 Which should output:
 
 <!-- OUTPUT:START -->
+
 <!-- OUTPUT:END -->
 
 ## 📝 Example
