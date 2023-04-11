@@ -88,6 +88,57 @@ def _is_private(name: str) -> bool:
     return name.startswith("_")
 
 
+def _get_class_name(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+    class_names: list[str],
+) -> str | None:
+    for cls in class_names[::-1]:
+        if any(
+            isinstance(parent, ast.ClassDef) and parent.name == cls
+            for parent in node.parent_list  # type: ignore[attr-defined, union-attr]
+        ):
+            return cls
+    return None
+
+
+def _get_decorator_name(
+    node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
+) -> str | None:
+    for decorator in node.decorator_list:
+        if isinstance(decorator, ast.Name | ast.Attribute):
+            return ast.unparse(decorator)
+    return None
+
+
+def _get_parameters(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+) -> list[Parameter]:
+    parameters = []
+    num_defaults = len(node.args.defaults)
+    num_positional_args = len(node.args.args) - num_defaults
+    kwonly_args = {kw.arg for kw in node.args.kwonlyargs}
+
+    for i, arg in enumerate(node.args.args):
+        default_value = None
+        if i >= num_positional_args:
+            default_index = i - num_positional_args
+            expr = node.args.defaults[default_index]
+            try:
+                default_value = ast.literal_eval(expr)
+            except ValueError:
+                default_value = ast.unparse(expr)
+        param_type = ast.unparse(arg.annotation) if arg.annotation else None
+        parameters.append(
+            Parameter(
+                name=arg.arg,
+                param_type=param_type,
+                default_value=default_value,
+                kw_only=bool(arg.arg in kwonly_args),
+            ),
+        )
+    return parameters
+
+
 def extract_function_info(
     tree: ast.Module,
 ) -> ExtractedFunctions:
@@ -105,51 +156,6 @@ def extract_function_info(
     result = ExtractedFunctions()
     class_names: list[str] = []
 
-    def get_class_name(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str | None:
-        for cls in class_names[::-1]:
-            if any(
-                isinstance(parent, ast.ClassDef) and parent.name == cls
-                for parent in node.parent_list  # type: ignore[attr-defined, union-attr]
-            ):
-                return cls
-        return None
-
-    def get_decorator_name(
-        node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
-    ) -> str | None:
-        for decorator in node.decorator_list:
-            if isinstance(decorator, ast.Name | ast.Attribute):
-                return ast.unparse(decorator)
-        return None
-
-    def get_parameters(
-        node: ast.FunctionDef | ast.AsyncFunctionDef,
-    ) -> list[Parameter]:
-        parameters = []
-        num_defaults = len(node.args.defaults)
-        num_positional_args = len(node.args.args) - num_defaults
-        kwonly_args = {kw.arg for kw in node.args.kwonlyargs}
-
-        for i, arg in enumerate(node.args.args):
-            default_value = None
-            if i >= num_positional_args:
-                default_index = i - num_positional_args
-                expr = node.args.defaults[default_index]
-                try:
-                    default_value = ast.literal_eval(expr)
-                except ValueError:
-                    default_value = ast.unparse(expr)
-            param_type = ast.unparse(arg.annotation) if arg.annotation else None
-            parameters.append(
-                Parameter(
-                    name=arg.arg,
-                    param_type=param_type,
-                    default_value=default_value,
-                    kw_only=bool(arg.arg in kwonly_args),
-                ),
-            )
-        return parameters
-
     for node in ast.walk(tree):
         if isinstance(node, ast.ClassDef):
             class_names.append(node.name)
@@ -161,7 +167,7 @@ def extract_function_info(
                 for stmt in node.body
                 if isinstance(stmt, ast.AnnAssign) and isinstance(stmt.target, ast.Name)
             ]
-            decorator_name = get_decorator_name(node)
+            decorator_name = _get_decorator_name(node)
             class_docstring = ast.get_docstring(node)
             result.classes.append(
                 (
@@ -184,9 +190,9 @@ def extract_function_info(
 
             function_name = node.name
             docstring = ast.get_docstring(node)
-            class_name = get_class_name(node)
-            decorator_name = get_decorator_name(node)
-            parameters = get_parameters(node)
+            class_name = _get_class_name(node, class_names)
+            decorator_name = _get_decorator_name(node)
+            parameters = _get_parameters(node)
             return_type = ast.unparse(node.returns) if node.returns else None
 
             function = Function(
