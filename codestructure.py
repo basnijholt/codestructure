@@ -347,8 +347,14 @@ def print_syntax_with_rich(
     line_numbers
         Whether to print line numbers.
     """
-    syntax = Syntax(s, "python", theme="monokai", line_numbers=line_numbers)
-    console = Console()
+    syntax = Syntax(
+        s,
+        "python",
+        theme="monokai",
+        line_numbers=line_numbers,
+        word_wrap=True,
+    )
+    console = Console(soft_wrap=False)
     console.print(syntax)
 
 
