@@ -1,6 +1,11 @@
 # :building_construction: CodeStructure
 
-> Extract code signatures without the code
+> Extract code signatures without the code :snake:
+
+[![PyPI](https://img.shields.io/pypi/v/codestructure)](https://pypi.org/project/codestructure/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/codestructure)](https://pypi.org/project/codestructure/)
+[![PyPI - License](https://img.shields.io/pypi/l/codestructure)](https://pypi.org/project/codestructure/)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/basnijholt/codestructure/pytest.yml)](https://github.com/basnijholt/codestructure/actions/workflows/pytest.yml)
 
 This program extracts information about the structure of Python code by analyzing the abstract syntax tree (AST) of a given Python file.
 It extracts information about classes, their attributes, and functions, as well as their signatures, parameters, return types, decorators, and docstrings.
