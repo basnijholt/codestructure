@@ -6,11 +6,16 @@ from io import StringIO
 from pathlib import Path
 from unittest import mock
 
+import pytest
+
 from codestructure import (
     Class,
     ExtractedFunctions,
     Function,
     Parameter,
+    _get_class_name,
+    _get_decorator_name,
+    _get_parameters,
     add_parent_list,
     extract_function_info,
     main,
@@ -519,3 +524,85 @@ def test_keyword_only_function() -> None:
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
+
+
+def test_get_class_name() -> None:
+    """Test _get_class_name."""
+    source_code = textwrap.dedent(
+        """
+        class A:
+            def method1(self):
+                pass
+        """,
+    )
+    tree = parse_module(source_code=source_code)
+    ast.increment_lineno(tree, 1)
+    function_node = tree.body[0].body[0]  # type: ignore[attr-defined]
+    assert _get_class_name(function_node, ["A"]) == "A"
+
+
+def test_get_decorator_name() -> None:
+    """Test _get_decorator_name."""
+    source_code = textwrap.dedent(
+        """
+        @my_decorator
+        def my_function():
+            pass
+        """,
+    )
+    tree = parse_module(source_code=source_code)
+    ast.increment_lineno(tree, 1)
+    function_node = tree.body[0]
+    assert _get_decorator_name(function_node) == "my_decorator"  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    ("source_code", "expected"),
+    [
+        (
+            textwrap.dedent(
+                """
+                def my_function(x: int, y: float, *, z: str = 'abc'):
+                    pass
+                """,
+            ),
+            [
+                Parameter("x", "int", None, False),  # noqa: FBT003
+                Parameter("y", "float", None, False),  # noqa: FBT003
+                Parameter("z", "str", "abc", True),  # noqa: FBT003
+            ],
+        ),
+        (
+            textwrap.dedent(
+                """
+                def my_function(a: int = 1, b: float = 2.0, c: str = 'test'):
+                    pass
+                """,
+            ),
+            [
+                Parameter("a", "int", 1, False),  # noqa: FBT003
+                Parameter("b", "float", 2.0, False),  # noqa: FBT003
+                Parameter("c", "str", "test", False),  # noqa: FBT003
+            ],
+        ),
+        (
+            textwrap.dedent(
+                """
+                def my_function(a: int, b: float, *args, **kwargs):
+                    pass
+                """,
+            ),
+            [
+                Parameter("a", "int", None, False),  # noqa: FBT003
+                Parameter("b", "float", None, False),  # noqa: FBT003
+            ],
+        ),
+    ],
+)
+def test_get_parameters(source_code: str, expected: list[Parameter]) -> None:
+    """Test _get_parameters."""
+    tree = parse_module(source_code=source_code)
+    ast.increment_lineno(tree, 1)
+    function_node = tree.body[0]
+    parameters = _get_parameters(function_node)  # type: ignore[arg-type]
+    assert parameters == expected
