@@ -1,5 +1,7 @@
 # :building_construction: CodeStructure
 
+> Extract code signatures without the code
+
 This program extracts information about the structure of Python code by analyzing the abstract syntax tree (AST) of a given Python file.
 It extracts information about classes, their attributes, and functions, as well as their signatures, parameters, return types, decorators, and docstrings.
 The script then print this information in a human-readable format with syntax highlighting.
