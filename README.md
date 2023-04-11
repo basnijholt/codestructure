@@ -1,16 +1,20 @@
 # :building_construction: CodeStructure
 
-CodeStructure is a Python package that analyzes the structure of a Python file and extracts information about its classes, functions, and their associated attributes.
-It is particularly useful for understanding and documenting complex codebases and writing design docs.
+This program extracts information about the structure of Python code by analyzing the abstract syntax tree (AST) of a given Python file.
+It extracts information about classes, their attributes, and functions, as well as their signatures, parameters, return types, decorators, and docstrings.
+The script then print this information in a human-readable format with syntax highlighting.
+It can also copy the output to the clipboard.
+It is particularly useful for understanding and documenting complex codebases and writing design docs or when pasting in some code in ChatGPT.
 
 ## :star: Features
 
-- Extract class and function signatures
-- Extract class attributes
-- Extract function parameters and their types
-- Extract function return types
-- Extract decorators and docstrings
-- Display the extracted information in a human-readable format
+- 🔎 Identifies class and function signatures without executing the code
+  - 📝 Retrieves class attributes
+  - 📚 Gathers function parameters and their corresponding types
+  - 🔄 Determines function return types
+  - 🎨 Recognizes decorators and docstrings
+- 🌟 Presents the code in an easily understandable format with Syntax Highlighting
+- ✅ Has 100% test coverage
 
 ## :books: Table of Contents
 
