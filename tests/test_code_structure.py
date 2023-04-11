@@ -479,3 +479,43 @@ def test_example_file() -> None:
         """,
     )
     assert output.strip() == expected.strip()
+
+
+def test_keyword_only_function() -> None:
+    """Test a function with a keyword-only argument."""
+    extracted_functions = ExtractedFunctions(
+        classes=[],
+        functions=[
+            (
+                "f",
+                Function(
+                    signature="f",
+                    docstring=None,
+                    decorator=None,
+                    parameters=[
+                        Parameter(name="x", param_type=None, default_value=None),
+                        Parameter(
+                            name="y",
+                            param_type="int",
+                            default_value=1,
+                            kw_only=True,
+                        ),
+                    ],
+                    return_type=None,
+                ),
+            ),
+        ],
+    )
+
+    expected_output = textwrap.dedent(
+        """\
+        def f(x, *, y: int = 1) -> None:
+            ...
+        """,
+    )
+
+    with StringIO() as string, contextlib.redirect_stdout(string):
+        print_function_info(extracted_functions, with_private=False)
+        output = string.getvalue()
+
+    assert output.strip() == expected_output.strip()

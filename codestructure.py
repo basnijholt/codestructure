@@ -51,6 +51,7 @@ class Parameter:
     name: str
     param_type: str | None
     default_value: Any | None
+    kw_only: bool = False
 
 
 @dataclass
@@ -127,6 +128,7 @@ def extract_function_info(
         parameters = []
         num_defaults = len(node.args.defaults)
         num_positional_args = len(node.args.args) - num_defaults
+        kwonly_args = {kw.arg for kw in node.args.kwonlyargs}
 
         for i, arg in enumerate(node.args.args):
             default_value = None
@@ -143,6 +145,7 @@ def extract_function_info(
                     name=arg.arg,
                     param_type=param_type,
                     default_value=default_value,
+                    kw_only=bool(arg.arg in kwonly_args),
                 ),
             )
         return parameters
@@ -240,6 +243,8 @@ def print_function_info(
             )
             if param.default_value is not None:
                 param_str += f" = {param.default_value}"
+            if param.kw_only:
+                param_str = "*, " + param_str
             params.append(param_str)
 
         signature += ", ".join(params)
