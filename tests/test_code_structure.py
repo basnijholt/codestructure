@@ -337,7 +337,8 @@ def test_extract_function_info_with_value_error_in_literal_eval() -> None:
     source_code = textwrap.dedent(
         """
         custom_default_value = 1
-        def example_function(a: int = custom_default_value):
+        CONST = 2
+        def example_function(a: int = custom_default_value, *, b: int = CONST):
             pass
         """,
     )
@@ -351,6 +352,7 @@ def test_extract_function_info_with_value_error_in_literal_eval() -> None:
                     decorator=None,
                     parameters=[
                         Parameter("a", "int", "custom_default_value"),
+                        Parameter("b", "int", "CONST", kw_only=True),
                     ],
                     return_type=None,
                 ),
