@@ -114,28 +114,63 @@ def _get_parameters(
     node: ast.FunctionDef | ast.AsyncFunctionDef,
 ) -> list[Parameter]:
     parameters = []
+
+    # Process positional arguments
     num_defaults = len(node.args.defaults)
     num_positional_args = len(node.args.args) - num_defaults
-    kwonly_args = {kw.arg for kw in node.args.kwonlyargs}
 
-    for i, arg in enumerate(node.args.args):
-        default_value = None
-        if i >= num_positional_args:
-            default_index = i - num_positional_args
-            expr = node.args.defaults[default_index]
-            try:
-                default_value = ast.literal_eval(expr)
-            except ValueError:
-                default_value = ast.unparse(expr)
+    for _i, arg in enumerate(node.args.args[:num_positional_args]):
+        param_type = ast.unparse(arg.annotation) if arg.annotation else None
+        parameters.append(
+            Parameter(
+                name=arg.arg,
+                param_type=param_type,
+                default_value=None,
+                kw_only=False,
+            ),
+        )
+
+    # Process positional arguments with default values
+    for i, arg in enumerate(node.args.args[num_positional_args:]):
+        default_index = i
+        expr = node.args.defaults[default_index]
+        try:
+            default_value = ast.literal_eval(expr)
+        except ValueError:
+            default_value = ast.unparse(expr)
+
         param_type = ast.unparse(arg.annotation) if arg.annotation else None
         parameters.append(
             Parameter(
                 name=arg.arg,
                 param_type=param_type,
                 default_value=default_value,
-                kw_only=bool(arg.arg in kwonly_args),
+                kw_only=False,
             ),
         )
+
+    # Process keyword-only arguments
+    len(node.args.kw_defaults)
+    for i, arg in enumerate(node.args.kwonlyargs):
+        default_value = None
+        if node.args.kw_defaults[i] is not None:
+            expr = node.args.kw_defaults[i]  # type: ignore[assignment]
+            assert expr is not None
+            try:
+                default_value = ast.literal_eval(expr)
+            except ValueError:
+                default_value = ast.unparse(expr)
+
+        param_type = ast.unparse(arg.annotation) if arg.annotation else None
+        parameters.append(
+            Parameter(
+                name=arg.arg,
+                param_type=param_type,
+                default_value=default_value,
+                kw_only=True,
+            ),
+        )
+
     return parameters
 
 
