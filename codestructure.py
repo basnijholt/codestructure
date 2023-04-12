@@ -311,7 +311,7 @@ class ExtractedInfo:
             ]
 
             if class_info.docstring:
-                print(f'    """{class_info.docstring}"""')
+                print(textwrap.indent(f'"""{class_info.docstring}"""\n', "    "))
             elif not attrs and not methods:
                 print("    ...")
 
