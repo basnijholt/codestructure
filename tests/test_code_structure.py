@@ -10,7 +10,7 @@ import pytest
 
 from codestructure import (
     Class,
-    ExtractedFunctions,
+    ExtractedInfo,
     Function,
     Parameter,
     add_parent_list,
@@ -56,7 +56,7 @@ def test_add_parent_list() -> None:
 
 
 def test_extract_function_info() -> None:
-    """Test ExtractedFunctions.from_ast."""
+    """Test ExtractedInfo.from_ast."""
     source_code = textwrap.dedent(
         """
 
@@ -76,9 +76,9 @@ def test_extract_function_info() -> None:
 
     ast_module = ast.parse(source_code)
     add_parent_list(ast_module)
-    extracted_functions = ExtractedFunctions.from_ast(ast_module)
+    extracted_functions = ExtractedInfo.from_ast(ast_module)
 
-    expected_functions = ExtractedFunctions(
+    expected_functions = ExtractedInfo(
         classes=[
             (
                 "ExampleClass",
@@ -118,8 +118,8 @@ def test_extract_function_info() -> None:
 
 
 def test_print_function_info_with_private() -> None:
-    """Test ExtractedFunctions.print with private functions included."""
-    extracted_functions = ExtractedFunctions(
+    """Test ExtractedInfo.print with private functions included."""
+    extracted_functions = ExtractedInfo(
         classes=[
             (
                 "ExampleClass",
@@ -170,15 +170,15 @@ def test_print_function_info_with_private() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        ExtractedFunctions.print(extracted_functions, with_private=True)
+        ExtractedInfo.print(extracted_functions, with_private=True)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
 
 
 def test_print_function_info_without_private() -> None:
-    """Test ExtractedFunctions.print without private functions."""
-    extracted_functions = ExtractedFunctions(
+    """Test ExtractedInfo.print without private functions."""
+    extracted_functions = ExtractedInfo(
         classes=[
             (
                 "ExampleClass",
@@ -223,7 +223,7 @@ def test_print_function_info_without_private() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        ExtractedFunctions.print(extracted_functions, with_private=False)
+        ExtractedInfo.print(extracted_functions, with_private=False)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
@@ -275,7 +275,7 @@ def test_main() -> None:
 
 
 def test_extract_function_info_with_decorator() -> None:
-    """Test ExtractedFunctions.from_ast with a decorated function."""
+    """Test ExtractedInfo.from_ast with a decorated function."""
     source_code = textwrap.dedent(
         """
         def decorator(func):
@@ -292,9 +292,9 @@ def test_extract_function_info_with_decorator() -> None:
 
     ast_module = ast.parse(source_code)
     add_parent_list(ast_module)
-    extracted_functions = ExtractedFunctions.from_ast(ast_module)
+    extracted_functions = ExtractedInfo.from_ast(ast_module)
 
-    expected_functions = ExtractedFunctions(
+    expected_functions = ExtractedInfo(
         functions=[
             (
                 "decorator",
@@ -328,7 +328,7 @@ def test_extract_function_info_with_decorator() -> None:
 
 
 def test_extract_function_info_with_value_error_in_literal_eval() -> None:
-    """Test ExtractedFunctions.from_ast with a ValueError in ast.literal_eval."""
+    """Test ExtractedInfo.from_ast with a ValueError in ast.literal_eval."""
     source_code = textwrap.dedent(
         """
         custom_default_value = 1
@@ -337,7 +337,7 @@ def test_extract_function_info_with_value_error_in_literal_eval() -> None:
             pass
         """,
     )
-    expected_functions = ExtractedFunctions(
+    expected_functions = ExtractedInfo(
         functions=[
             (
                 "example_function",
@@ -356,14 +356,14 @@ def test_extract_function_info_with_value_error_in_literal_eval() -> None:
     )
 
     tree = parse_module(source_code=source_code)
-    function_info = ExtractedFunctions.from_ast(tree)
+    function_info = ExtractedInfo.from_ast(tree)
 
     assert function_info == expected_functions
 
 
 def test_print_function_info_with_class_docstring() -> None:
-    """Test ExtractedFunctions.print with a class that has a docstring."""
-    extracted_functions = ExtractedFunctions(
+    """Test ExtractedInfo.print with a class that has a docstring."""
+    extracted_functions = ExtractedInfo(
         classes=[
             (
                 "Foo",
@@ -386,15 +386,15 @@ def test_print_function_info_with_class_docstring() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        ExtractedFunctions.print(extracted_functions, with_private=True)
+        ExtractedInfo.print(extracted_functions, with_private=True)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
 
 
 def test_print_function_info_with_class_attribute() -> None:
-    """Test ExtractedFunctions.print with a class that has an attribute."""
-    extracted_functions = ExtractedFunctions(
+    """Test ExtractedInfo.print with a class that has an attribute."""
+    extracted_functions = ExtractedInfo(
         classes=[
             (
                 "A",
@@ -419,15 +419,15 @@ def test_print_function_info_with_class_attribute() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        ExtractedFunctions.print(extracted_functions, with_private=True)
+        ExtractedInfo.print(extracted_functions, with_private=True)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
 
 
 def test_print_function_info_with_private_class_attribute() -> None:
-    """Test ExtractedFunctions.print with a class that has a private attribute."""
-    extracted_functions = ExtractedFunctions(
+    """Test ExtractedInfo.print with a class that has a private attribute."""
+    extracted_functions = ExtractedInfo(
         classes=[
             (
                 "A",
@@ -450,7 +450,7 @@ def test_print_function_info_with_private_class_attribute() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        ExtractedFunctions.print(extracted_functions, with_private=False)
+        ExtractedInfo.print(extracted_functions, with_private=False)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
@@ -463,10 +463,10 @@ def test_example_file() -> None:
         source_code = f.read()
 
     tree = parse_module(source_code=source_code)
-    function_info = ExtractedFunctions.from_ast(tree)
+    function_info = ExtractedInfo.from_ast(tree)
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        ExtractedFunctions.print(function_info, with_private=False)
+        ExtractedInfo.print(function_info, with_private=False)
         output = string.getvalue()
     expected = textwrap.dedent(
         """
@@ -485,7 +485,7 @@ def test_example_file() -> None:
 
 def test_keyword_only_function() -> None:
     """Test a function with a keyword-only argument."""
-    extracted_functions = ExtractedFunctions(
+    extracted_functions = ExtractedInfo(
         classes=[],
         functions=[
             (
@@ -517,7 +517,7 @@ def test_keyword_only_function() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        ExtractedFunctions.print(extracted_functions, with_private=False)
+        ExtractedInfo.print(extracted_functions, with_private=False)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()

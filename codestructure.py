@@ -66,6 +66,26 @@ class Function:
     parameters: list[Parameter]
     return_type: str | None
 
+    @classmethod
+    def from_node(
+        cls: type[Function],
+        node: ast.FunctionDef | ast.AsyncFunctionDef,
+    ) -> Function:
+        """Create a Function object from an AST node."""
+        function_name = node.name
+        docstring = ast.get_docstring(node)
+
+        decorator_name = Class.get_decorator_name(node)
+        parameters = Function.get_parameters(node)
+        return_type = ast.unparse(node.returns) if node.returns else None
+        return Function(
+            signature=function_name,
+            docstring=docstring,
+            decorator=decorator_name,
+            parameters=parameters,
+            return_type=return_type,
+        )
+
     @staticmethod
     def get_parameters(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[Parameter]:
         """Get the parameters of a function.
@@ -146,6 +166,26 @@ class Class:
     docstring: str | None = None
     decorator: str | None = None
 
+    @classmethod
+    def from_node(cls: type[Class], node: ast.ClassDef) -> Class:
+        """Create a Class object from an AST node."""
+        class_attributes = [
+            (
+                stmt.target.id,
+                ast.unparse(stmt.annotation) if stmt.annotation else None,
+            )
+            for stmt in node.body
+            if isinstance(stmt, ast.AnnAssign) and isinstance(stmt.target, ast.Name)
+        ]
+        decorator_name = Class.get_decorator_name(node)
+        class_docstring = ast.get_docstring(node)
+        return cls(
+            class_name=node.name,
+            docstring=class_docstring,
+            attributes=class_attributes,
+            decorator=decorator_name,
+        )
+
     @staticmethod
     def get_decorator_name(
         node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
@@ -172,14 +212,14 @@ class Class:
 
 
 @dataclass
-class ExtractedFunctions:
+class ExtractedInfo:
     """The information about classes and functions in a Python module."""
 
     classes: list[tuple[str, Class]] = field(default_factory=list)
     functions: list[tuple[str, Function]] = field(default_factory=list)
 
     @classmethod
-    def from_ast(cls: type[ExtractedFunctions], tree: ast.Module) -> ExtractedFunctions:
+    def from_ast(cls: type[ExtractedInfo], tree: ast.Module) -> ExtractedInfo:
         """Extract information about classes and functions from the AST of a Python module.
 
         Parameters
@@ -189,36 +229,15 @@ class ExtractedFunctions:
 
         Returns
         -------
-            An ExtractedFunctions object containing information about the classes and functions in the module.
+            An ExtractedInfo object containing information about the classes and functions in the module.
         """
-        result = ExtractedFunctions()
+        result = ExtractedInfo()
         class_names: list[str] = []
 
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
                 class_names.append(node.name)
-                class_attributes = [
-                    (
-                        stmt.target.id,
-                        ast.unparse(stmt.annotation) if stmt.annotation else None,
-                    )
-                    for stmt in node.body
-                    if isinstance(stmt, ast.AnnAssign)
-                    and isinstance(stmt.target, ast.Name)
-                ]
-                decorator_name = Class.get_decorator_name(node)
-                class_docstring = ast.get_docstring(node)
-                result.classes.append(
-                    (
-                        node.name,
-                        Class(
-                            class_name=node.name,
-                            docstring=class_docstring,
-                            attributes=class_attributes,
-                            decorator=decorator_name,
-                        ),
-                    ),
-                )
+                result.classes.append((node.name, Class.from_node(node)))
 
             if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 if any(
@@ -227,33 +246,21 @@ class ExtractedFunctions:
                 ):
                     continue
 
-                function_name = node.name
-                docstring = ast.get_docstring(node)
                 class_name = Class.get_class_name(node, class_names)
-                decorator_name = Class.get_decorator_name(node)
-                parameters = Function.get_parameters(node)
-                return_type = ast.unparse(node.returns) if node.returns else None
-
-                function = Function(
-                    signature=function_name,
-                    docstring=docstring,
-                    decorator=decorator_name,
-                    parameters=parameters,
-                    return_type=return_type,
-                )
+                func = Function.from_node(node)
                 if class_name:
                     class_index = next(
                         i
                         for i, (cls_name, _) in enumerate(result.classes)
                         if cls_name == class_name
                     )
-                    result.classes[class_index][1].functions[function_name] = function
+                    result.classes[class_index][1].functions[func.signature] = func
                 else:
-                    result.functions.append((function_name, function))
+                    result.functions.append((func.signature, func))
         return result
 
     def print(  # noqa: A003
-        self: ExtractedFunctions,
+        self: ExtractedInfo,
         *,
         with_private: bool = True,
     ) -> None:
@@ -407,10 +414,10 @@ def main() -> None:
     args = parser.parse_args()
 
     tree = parse_module(args.module_file_path)
-    function_info = ExtractedFunctions.from_ast(tree)
+    function_info = ExtractedInfo.from_ast(tree)
 
     with io.StringIO() as string, contextlib.redirect_stdout(string):
-        ExtractedFunctions.print(function_info, with_private=not args.no_private)
+        ExtractedInfo.print(function_info, with_private=not args.no_private)
         output = string.getvalue()
 
     if args.backticks:  # pragma: no cover
