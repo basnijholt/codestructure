@@ -10,17 +10,12 @@ import pytest
 
 from codestructure import (
     Class,
-    ExtractedFunctions,
+    ExtractedInfo,
     Function,
     Parameter,
-    _get_class_name,
-    _get_decorator_name,
-    _get_parameters,
     add_parent_list,
-    extract_function_info,
     main,
     parse_module,
-    print_function_info,
 )
 
 REPO_ROOT = Path(__file__).parent.parent
@@ -61,7 +56,7 @@ def test_add_parent_list() -> None:
 
 
 def test_extract_function_info() -> None:
-    """Test extract_function_info."""
+    """Test ExtractedInfo.from_ast."""
     source_code = textwrap.dedent(
         """
 
@@ -81,32 +76,28 @@ def test_extract_function_info() -> None:
 
     ast_module = ast.parse(source_code)
     add_parent_list(ast_module)
-    extracted_functions = extract_function_info(ast_module)
+    extracted_functions = ExtractedInfo.from_ast(ast_module)
 
-    expected_functions = ExtractedFunctions(
+    expected_functions = ExtractedInfo(
         classes=[
-            (
-                "ExampleClass",
-                Class(
-                    class_name="ExampleClass",
-                    attributes=[("x", "int"), ("y", "int")],
-                    functions={
-                        "example_method": Function(
-                            signature="example_method",
-                            docstring="An example method.",
-                            decorator=None,
-                            parameters=[Parameter("self", None, None)],
-                            return_type="None",
-                        ),
-                    },
-                ),
+            Class(
+                class_name="ExampleClass",
+                attributes=[("x", "int"), ("y", "int")],
+                functions=[
+                    Function(
+                        name="example_method",
+                        docstring="An example method.",
+                        decorator=None,
+                        parameters=[Parameter("self", None, None)],
+                        return_type="None",
+                    ),
+                ],
             ),
         ],
         functions=[
             (
-                "example_function",
                 Function(
-                    signature="example_function",
+                    name="example_function",
                     docstring="An example function.",
                     decorator=None,
                     parameters=[
@@ -114,7 +105,7 @@ def test_extract_function_info() -> None:
                         Parameter("b", "int", 2),
                     ],
                     return_type="int",
-                ),
+                )
             ),
         ],
     )
@@ -123,31 +114,27 @@ def test_extract_function_info() -> None:
 
 
 def test_print_function_info_with_private() -> None:
-    """Test print_function_info with private functions included."""
-    extracted_functions = ExtractedFunctions(
+    """Test ExtractedInfo.print with private functions included."""
+    extracted_functions = ExtractedInfo(
         classes=[
-            (
-                "ExampleClass",
-                Class(
-                    class_name="ExampleClass",
-                    attributes=[("x", "int"), ("y", "int")],
-                    functions={
-                        "_example_private_method": Function(
-                            signature="_example_private_method",
-                            docstring="An example private method.",
-                            decorator=None,
-                            parameters=[Parameter("self", None, None)],
-                            return_type="None",
-                        ),
-                    },
-                ),
+            Class(
+                class_name="ExampleClass",
+                attributes=[("x", "int"), ("y", "int")],
+                functions=[
+                    Function(
+                        name="_example_private_method",
+                        docstring="An example private method.",
+                        decorator=None,
+                        parameters=[Parameter("self", None, None)],
+                        return_type="None",
+                    ),
+                ],
             ),
         ],
         functions=[
             (
-                "_example_private_function",
                 Function(
-                    signature="_example_private_function",
+                    name="_example_private_function",
                     docstring="An example private function.",
                     decorator=None,
                     parameters=[
@@ -155,7 +142,7 @@ def test_print_function_info_with_private() -> None:
                         Parameter("b", "int", 2),
                     ],
                     return_type="int",
-                ),
+                )
             ),
         ],
     )
@@ -175,38 +162,34 @@ def test_print_function_info_with_private() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        print_function_info(extracted_functions, with_private=True)
+        ExtractedInfo.print(extracted_functions, with_private=True)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
 
 
 def test_print_function_info_without_private() -> None:
-    """Test print_function_info without private functions."""
-    extracted_functions = ExtractedFunctions(
+    """Test ExtractedInfo.print without private functions."""
+    extracted_functions = ExtractedInfo(
         classes=[
-            (
-                "ExampleClass",
-                Class(
-                    class_name="ExampleClass",
-                    attributes=[("x", "int"), ("y", "int")],
-                    functions={
-                        "_example_private_method": Function(
-                            signature="_example_private_method",
-                            docstring="An example private method.",
-                            decorator=None,
-                            parameters=[Parameter("self", None, None)],
-                            return_type="None",
-                        ),
-                    },
-                ),
+            Class(
+                class_name="ExampleClass",
+                attributes=[("x", "int"), ("y", "int")],
+                functions=[
+                    Function(
+                        name="_example_private_method",
+                        docstring="An example private method.",
+                        decorator=None,
+                        parameters=[Parameter("self", None, None)],
+                        return_type="None",
+                    ),
+                ],
             ),
         ],
         functions=[
             (
-                "_example_private_function",
                 Function(
-                    signature="_example_private_function",
+                    name="_example_private_function",
                     docstring="An example private function.",
                     decorator=None,
                     parameters=[
@@ -214,7 +197,7 @@ def test_print_function_info_without_private() -> None:
                         Parameter("b", "int", 2),
                     ],
                     return_type="int",
-                ),
+                )
             ),
         ],
     )
@@ -228,7 +211,7 @@ def test_print_function_info_without_private() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        print_function_info(extracted_functions, with_private=False)
+        ExtractedInfo.print(extracted_functions, with_private=False)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
@@ -280,7 +263,7 @@ def test_main() -> None:
 
 
 def test_extract_function_info_with_decorator() -> None:
-    """Test extract_function_info with a decorated function."""
+    """Test ExtractedInfo.from_ast with a decorated function."""
     source_code = textwrap.dedent(
         """
         def decorator(func):
@@ -297,34 +280,28 @@ def test_extract_function_info_with_decorator() -> None:
 
     ast_module = ast.parse(source_code)
     add_parent_list(ast_module)
-    extracted_functions = extract_function_info(ast_module)
+    extracted_functions = ExtractedInfo.from_ast(ast_module)
 
-    expected_functions = ExtractedFunctions(
+    expected_functions = ExtractedInfo(
         functions=[
-            (
-                "decorator",
-                Function(
-                    signature="decorator",
-                    docstring=None,
-                    decorator=None,
-                    parameters=[
-                        Parameter("func", None, None),
-                    ],
-                    return_type=None,
-                ),
+            Function(
+                name="decorator",
+                docstring=None,
+                decorator=None,
+                parameters=[
+                    Parameter("func", None, None),
+                ],
+                return_type=None,
             ),
-            (
-                "example_function",
-                Function(
-                    signature="example_function",
-                    docstring="An example function.",
-                    decorator="decorator",
-                    parameters=[
-                        Parameter("a", "int", None),
-                        Parameter("b", "int", 2),
-                    ],
-                    return_type="int",
-                ),
+            Function(
+                name="example_function",
+                docstring="An example function.",
+                decorator="decorator",
+                parameters=[
+                    Parameter("a", "int", None),
+                    Parameter("b", "int", 2),
+                ],
+                return_type="int",
             ),
         ],
     )
@@ -333,7 +310,7 @@ def test_extract_function_info_with_decorator() -> None:
 
 
 def test_extract_function_info_with_value_error_in_literal_eval() -> None:
-    """Test extract_function_info with a ValueError in ast.literal_eval."""
+    """Test ExtractedInfo.from_ast with a ValueError in ast.literal_eval."""
     source_code = textwrap.dedent(
         """
         custom_default_value = 1
@@ -342,12 +319,11 @@ def test_extract_function_info_with_value_error_in_literal_eval() -> None:
             pass
         """,
     )
-    expected_functions = ExtractedFunctions(
+    expected_functions = ExtractedInfo(
         functions=[
             (
-                "example_function",
                 Function(
-                    signature="example_function",
+                    name="example_function",
                     docstring=None,
                     decorator=None,
                     parameters=[
@@ -355,29 +331,26 @@ def test_extract_function_info_with_value_error_in_literal_eval() -> None:
                         Parameter("b", "int", "CONST", kw_only=True),
                     ],
                     return_type=None,
-                ),
+                )
             ),
         ],
     )
 
     tree = parse_module(source_code=source_code)
-    function_info = extract_function_info(tree)
+    function_info = ExtractedInfo.from_ast(tree)
 
     assert function_info == expected_functions
 
 
 def test_print_function_info_with_class_docstring() -> None:
-    """Test print_function_info with a class that has a docstring."""
-    extracted_functions = ExtractedFunctions(
+    """Test ExtractedInfo.print with a class that has a docstring."""
+    extracted_functions = ExtractedInfo(
         classes=[
-            (
-                "Foo",
-                Class(
-                    class_name="Foo",
-                    docstring="Some exception.",
-                    attributes=[],
-                    functions={},
-                ),
+            Class(
+                class_name="Foo",
+                docstring="Some exception.",
+                attributes=[],
+                functions=[],
             ),
         ],
         functions=[],
@@ -391,25 +364,22 @@ def test_print_function_info_with_class_docstring() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        print_function_info(extracted_functions, with_private=True)
+        ExtractedInfo.print(extracted_functions, with_private=True)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
 
 
 def test_print_function_info_with_class_attribute() -> None:
-    """Test print_function_info with a class that has an attribute."""
-    extracted_functions = ExtractedFunctions(
+    """Test ExtractedInfo.print with a class that has an attribute."""
+    extracted_functions = ExtractedInfo(
         classes=[
-            (
-                "A",
-                Class(
-                    class_name="A",
-                    docstring=None,
-                    attributes=[("x", "int")],
-                    functions={},
-                    decorator="dataclass",
-                ),
+            Class(
+                class_name="A",
+                docstring=None,
+                attributes=[("x", "int")],
+                functions=[],
+                decorator="dataclass",
             ),
         ],
         functions=[],
@@ -424,24 +394,21 @@ def test_print_function_info_with_class_attribute() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        print_function_info(extracted_functions, with_private=True)
+        ExtractedInfo.print(extracted_functions, with_private=True)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
 
 
 def test_print_function_info_with_private_class_attribute() -> None:
-    """Test print_function_info with a class that has a private attribute."""
-    extracted_functions = ExtractedFunctions(
+    """Test ExtractedInfo.print with a class that has a private attribute."""
+    extracted_functions = ExtractedInfo(
         classes=[
-            (
-                "A",
-                Class(
-                    class_name="A",
-                    docstring=None,
-                    attributes=[("_priv", "bool")],
-                    functions={},
-                ),
+            Class(
+                class_name="A",
+                docstring=None,
+                attributes=[("_priv", "bool")],
+                functions=[],
             ),
         ],
         functions=[],
@@ -455,7 +422,7 @@ def test_print_function_info_with_private_class_attribute() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        print_function_info(extracted_functions, with_private=False)
+        ExtractedInfo.print(extracted_functions, with_private=False)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
@@ -468,10 +435,10 @@ def test_example_file() -> None:
         source_code = f.read()
 
     tree = parse_module(source_code=source_code)
-    function_info = extract_function_info(tree)
+    function_info = ExtractedInfo.from_ast(tree)
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        print_function_info(function_info, with_private=False)
+        ExtractedInfo.print(function_info, with_private=False)
         output = string.getvalue()
     expected = textwrap.dedent(
         """
@@ -490,13 +457,12 @@ def test_example_file() -> None:
 
 def test_keyword_only_function() -> None:
     """Test a function with a keyword-only argument."""
-    extracted_functions = ExtractedFunctions(
+    extracted_functions = ExtractedInfo(
         classes=[],
         functions=[
             (
-                "f",
                 Function(
-                    signature="f",
+                    name="f",
                     docstring=None,
                     decorator=None,
                     parameters=[
@@ -509,7 +475,7 @@ def test_keyword_only_function() -> None:
                         ),
                     ],
                     return_type=None,
-                ),
+                )
             ),
         ],
     )
@@ -522,14 +488,14 @@ def test_keyword_only_function() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        print_function_info(extracted_functions, with_private=False)
+        ExtractedInfo.print(extracted_functions, with_private=False)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
 
 
 def test_get_class_name() -> None:
-    """Test _get_class_name."""
+    """Test Class.get_class_name."""
     source_code = textwrap.dedent(
         """
         class A:
@@ -540,11 +506,11 @@ def test_get_class_name() -> None:
     tree = parse_module(source_code=source_code)
     ast.increment_lineno(tree, 1)
     function_node = tree.body[0].body[0]  # type: ignore[attr-defined]
-    assert _get_class_name(function_node, ["A"]) == "A"
+    assert Class.get_class_name(function_node, ["A"]) == "A"
 
 
 def test_get_decorator_name() -> None:
-    """Test _get_decorator_name."""
+    """Test Class.get_decorator_name."""
     source_code = textwrap.dedent(
         """
         @my_decorator
@@ -555,7 +521,7 @@ def test_get_decorator_name() -> None:
     tree = parse_module(source_code=source_code)
     ast.increment_lineno(tree, 1)
     function_node = tree.body[0]
-    assert _get_decorator_name(function_node) == "my_decorator"  # type: ignore[arg-type]
+    assert Class.get_decorator_name(function_node) == "my_decorator"  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(
@@ -602,9 +568,9 @@ def test_get_decorator_name() -> None:
     ],
 )
 def test_get_parameters(source_code: str, expected: list[Parameter]) -> None:
-    """Test _get_parameters."""
+    """Test Function.get_parameters."""
     tree = parse_module(source_code=source_code)
     ast.increment_lineno(tree, 1)
     function_node = tree.body[0]
-    parameters = _get_parameters(function_node)  # type: ignore[arg-type]
+    parameters = Function.get_parameters(function_node)  # type: ignore[arg-type]
     assert parameters == expected
