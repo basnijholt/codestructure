@@ -83,8 +83,8 @@ def test_extract_function_info() -> None:
             Class(
                 class_name="ExampleClass",
                 attributes=[("x", "int"), ("y", "int")],
-                functions={
-                    "example_method": Function(
+                functions=[
+                    Function(
                         name="example_method",
                         docstring="An example method.",
                         decorator=None,
@@ -92,7 +92,7 @@ def test_extract_function_info() -> None:
                         return_type="None",
                         class_name="ExampleClass",
                     ),
-                },
+                ],
             ),
         ],
         functions=[
@@ -121,15 +121,15 @@ def test_print_function_info_with_private() -> None:
             Class(
                 class_name="ExampleClass",
                 attributes=[("x", "int"), ("y", "int")],
-                functions={
-                    "_example_private_method": Function(
+                functions=[
+                    Function(
                         name="_example_private_method",
                         docstring="An example private method.",
                         decorator=None,
                         parameters=[Parameter("self", None, None)],
                         return_type="None",
                     ),
-                },
+                ],
             ),
         ],
         functions=[
@@ -176,15 +176,15 @@ def test_print_function_info_without_private() -> None:
             Class(
                 class_name="ExampleClass",
                 attributes=[("x", "int"), ("y", "int")],
-                functions={
-                    "_example_private_method": Function(
+                functions=[
+                    Function(
                         name="_example_private_method",
                         docstring="An example private method.",
                         decorator=None,
                         parameters=[Parameter("self", None, None)],
                         return_type="None",
                     ),
-                },
+                ],
             ),
         ],
         functions=[
@@ -351,7 +351,7 @@ def test_print_function_info_with_class_docstring() -> None:
                 class_name="Foo",
                 docstring="Some exception.",
                 attributes=[],
-                functions={},
+                functions=[],
             ),
         ],
         functions=[],
@@ -379,7 +379,7 @@ def test_print_function_info_with_class_attribute() -> None:
                 class_name="A",
                 docstring=None,
                 attributes=[("x", "int")],
-                functions={},
+                functions=[],
                 decorator="dataclass",
             ),
         ],
@@ -409,7 +409,7 @@ def test_print_function_info_with_private_class_attribute() -> None:
                 class_name="A",
                 docstring=None,
                 attributes=[("_priv", "bool")],
-                functions={},
+                functions=[],
             ),
         ],
         functions=[],

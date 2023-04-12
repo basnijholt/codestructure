@@ -163,7 +163,7 @@ class Class:
 
     class_name: str
     attributes: list[tuple[str, str | None]]
-    functions: dict[str, Function] = field(default_factory=dict)
+    functions: list[Function] = field(default_factory=list)
     docstring: str | None = None
     decorator: str | None = None
 
@@ -255,7 +255,7 @@ class ExtractedInfo:
                         for i, class_info in enumerate(result.classes)
                         if class_info.class_name == class_name
                     )
-                    result.classes[class_index].functions[func.name] = func
+                    result.classes[class_index].functions.append(func)
                 else:
                     result.functions.append(func)
         return result
@@ -308,9 +308,9 @@ class ExtractedInfo:
                 if with_private or not _is_private(attr_name)
             ]
             methods = [
-                (method_name, method)
-                for method_name, method in class_info.functions.items()
-                if with_private or not _is_private(method_name)
+                (method.name, method)
+                for method in class_info.functions
+                if with_private or not _is_private(method.name)
             ]
 
             if class_info.docstring:
