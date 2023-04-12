@@ -90,6 +90,7 @@ def test_extract_function_info() -> None:
                         decorator=None,
                         parameters=[Parameter("self", None, None)],
                         return_type="None",
+                        class_name="ExampleClass",
                     ),
                 },
             ),
