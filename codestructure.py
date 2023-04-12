@@ -132,7 +132,6 @@ class Function:
             )
 
         # Process keyword-only arguments
-        len(node.args.kw_defaults)
         for i, arg in enumerate(node.args.kwonlyargs):
             default_value = None
             if node.args.kw_defaults[i] is not None:
