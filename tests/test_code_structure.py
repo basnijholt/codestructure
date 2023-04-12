@@ -80,26 +80,22 @@ def test_extract_function_info() -> None:
 
     expected_functions = ExtractedInfo(
         classes=[
-            (
-                "ExampleClass",
-                Class(
-                    class_name="ExampleClass",
-                    attributes=[("x", "int"), ("y", "int")],
-                    functions={
-                        "example_method": Function(
-                            name="example_method",
-                            docstring="An example method.",
-                            decorator=None,
-                            parameters=[Parameter("self", None, None)],
-                            return_type="None",
-                        ),
-                    },
-                ),
+            Class(
+                class_name="ExampleClass",
+                attributes=[("x", "int"), ("y", "int")],
+                functions={
+                    "example_method": Function(
+                        name="example_method",
+                        docstring="An example method.",
+                        decorator=None,
+                        parameters=[Parameter("self", None, None)],
+                        return_type="None",
+                    ),
+                },
             ),
         ],
         functions=[
             (
-                "example_function",
                 Function(
                     name="example_function",
                     docstring="An example function.",
@@ -109,7 +105,7 @@ def test_extract_function_info() -> None:
                         Parameter("b", "int", 2),
                     ],
                     return_type="int",
-                ),
+                )
             ),
         ],
     )
@@ -121,26 +117,22 @@ def test_print_function_info_with_private() -> None:
     """Test ExtractedInfo.print with private functions included."""
     extracted_functions = ExtractedInfo(
         classes=[
-            (
-                "ExampleClass",
-                Class(
-                    class_name="ExampleClass",
-                    attributes=[("x", "int"), ("y", "int")],
-                    functions={
-                        "_example_private_method": Function(
-                            name="_example_private_method",
-                            docstring="An example private method.",
-                            decorator=None,
-                            parameters=[Parameter("self", None, None)],
-                            return_type="None",
-                        ),
-                    },
-                ),
+            Class(
+                class_name="ExampleClass",
+                attributes=[("x", "int"), ("y", "int")],
+                functions={
+                    "_example_private_method": Function(
+                        name="_example_private_method",
+                        docstring="An example private method.",
+                        decorator=None,
+                        parameters=[Parameter("self", None, None)],
+                        return_type="None",
+                    ),
+                },
             ),
         ],
         functions=[
             (
-                "_example_private_function",
                 Function(
                     name="_example_private_function",
                     docstring="An example private function.",
@@ -150,7 +142,7 @@ def test_print_function_info_with_private() -> None:
                         Parameter("b", "int", 2),
                     ],
                     return_type="int",
-                ),
+                )
             ),
         ],
     )
@@ -180,26 +172,22 @@ def test_print_function_info_without_private() -> None:
     """Test ExtractedInfo.print without private functions."""
     extracted_functions = ExtractedInfo(
         classes=[
-            (
-                "ExampleClass",
-                Class(
-                    class_name="ExampleClass",
-                    attributes=[("x", "int"), ("y", "int")],
-                    functions={
-                        "_example_private_method": Function(
-                            name="_example_private_method",
-                            docstring="An example private method.",
-                            decorator=None,
-                            parameters=[Parameter("self", None, None)],
-                            return_type="None",
-                        ),
-                    },
-                ),
+            Class(
+                class_name="ExampleClass",
+                attributes=[("x", "int"), ("y", "int")],
+                functions={
+                    "_example_private_method": Function(
+                        name="_example_private_method",
+                        docstring="An example private method.",
+                        decorator=None,
+                        parameters=[Parameter("self", None, None)],
+                        return_type="None",
+                    ),
+                },
             ),
         ],
         functions=[
             (
-                "_example_private_function",
                 Function(
                     name="_example_private_function",
                     docstring="An example private function.",
@@ -209,7 +197,7 @@ def test_print_function_info_without_private() -> None:
                         Parameter("b", "int", 2),
                     ],
                     return_type="int",
-                ),
+                )
             ),
         ],
     )
@@ -296,30 +284,24 @@ def test_extract_function_info_with_decorator() -> None:
 
     expected_functions = ExtractedInfo(
         functions=[
-            (
-                "decorator",
-                Function(
-                    name="decorator",
-                    docstring=None,
-                    decorator=None,
-                    parameters=[
-                        Parameter("func", None, None),
-                    ],
-                    return_type=None,
-                ),
+            Function(
+                name="decorator",
+                docstring=None,
+                decorator=None,
+                parameters=[
+                    Parameter("func", None, None),
+                ],
+                return_type=None,
             ),
-            (
-                "example_function",
-                Function(
-                    name="example_function",
-                    docstring="An example function.",
-                    decorator="decorator",
-                    parameters=[
-                        Parameter("a", "int", None),
-                        Parameter("b", "int", 2),
-                    ],
-                    return_type="int",
-                ),
+            Function(
+                name="example_function",
+                docstring="An example function.",
+                decorator="decorator",
+                parameters=[
+                    Parameter("a", "int", None),
+                    Parameter("b", "int", 2),
+                ],
+                return_type="int",
             ),
         ],
     )
@@ -340,7 +322,6 @@ def test_extract_function_info_with_value_error_in_literal_eval() -> None:
     expected_functions = ExtractedInfo(
         functions=[
             (
-                "example_function",
                 Function(
                     name="example_function",
                     docstring=None,
@@ -350,7 +331,7 @@ def test_extract_function_info_with_value_error_in_literal_eval() -> None:
                         Parameter("b", "int", "CONST", kw_only=True),
                     ],
                     return_type=None,
-                ),
+                )
             ),
         ],
     )
@@ -365,14 +346,11 @@ def test_print_function_info_with_class_docstring() -> None:
     """Test ExtractedInfo.print with a class that has a docstring."""
     extracted_functions = ExtractedInfo(
         classes=[
-            (
-                "Foo",
-                Class(
-                    class_name="Foo",
-                    docstring="Some exception.",
-                    attributes=[],
-                    functions={},
-                ),
+            Class(
+                class_name="Foo",
+                docstring="Some exception.",
+                attributes=[],
+                functions={},
             ),
         ],
         functions=[],
@@ -396,15 +374,12 @@ def test_print_function_info_with_class_attribute() -> None:
     """Test ExtractedInfo.print with a class that has an attribute."""
     extracted_functions = ExtractedInfo(
         classes=[
-            (
-                "A",
-                Class(
-                    class_name="A",
-                    docstring=None,
-                    attributes=[("x", "int")],
-                    functions={},
-                    decorator="dataclass",
-                ),
+            Class(
+                class_name="A",
+                docstring=None,
+                attributes=[("x", "int")],
+                functions={},
+                decorator="dataclass",
             ),
         ],
         functions=[],
@@ -429,14 +404,11 @@ def test_print_function_info_with_private_class_attribute() -> None:
     """Test ExtractedInfo.print with a class that has a private attribute."""
     extracted_functions = ExtractedInfo(
         classes=[
-            (
-                "A",
-                Class(
-                    class_name="A",
-                    docstring=None,
-                    attributes=[("_priv", "bool")],
-                    functions={},
-                ),
+            Class(
+                class_name="A",
+                docstring=None,
+                attributes=[("_priv", "bool")],
+                functions={},
             ),
         ],
         functions=[],
@@ -489,7 +461,6 @@ def test_keyword_only_function() -> None:
         classes=[],
         functions=[
             (
-                "f",
                 Function(
                     name="f",
                     docstring=None,
@@ -504,7 +475,7 @@ def test_keyword_only_function() -> None:
                         ),
                     ],
                     return_type=None,
-                ),
+                )
             ),
         ],
     )

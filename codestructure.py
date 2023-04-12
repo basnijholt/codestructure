@@ -74,7 +74,6 @@ class Function:
         """Create a Function object from an AST node."""
         function_name = node.name
         docstring = ast.get_docstring(node)
-
         decorator_name = Class.get_decorator_name(node)
         parameters = Function.get_parameters(node)
         return_type = ast.unparse(node.returns) if node.returns else None
@@ -214,8 +213,8 @@ class Class:
 class ExtractedInfo:
     """The information about classes and functions in a Python module."""
 
-    classes: list[tuple[str, Class]] = field(default_factory=list)
-    functions: list[tuple[str, Function]] = field(default_factory=list)
+    classes: list[Class] = field(default_factory=list)
+    functions: list[Function] = field(default_factory=list)
 
     @classmethod
     def from_ast(cls: type[ExtractedInfo], tree: ast.Module) -> ExtractedInfo:
@@ -236,7 +235,7 @@ class ExtractedInfo:
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
                 class_names.append(node.name)
-                result.classes.append((node.name, Class.from_node(node)))
+                result.classes.append(Class.from_node(node))
 
             if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 if any(
@@ -250,12 +249,12 @@ class ExtractedInfo:
                 if class_name:
                     class_index = next(
                         i
-                        for i, (cls_name, _) in enumerate(result.classes)
-                        if cls_name == class_name
+                        for i, class_info in enumerate(result.classes)
+                        if class_info.class_name == class_name
                     )
-                    result.classes[class_index][1].functions[func.name] = func
+                    result.classes[class_index].functions[func.name] = func
                 else:
-                    result.functions.append((func.name, func))
+                    result.functions.append(func)
         return result
 
     def print(  # noqa: A003
@@ -295,10 +294,10 @@ class ExtractedInfo:
 
             return f"{decorator}{signature}\n{docstring}\n"
 
-        for class_name, class_info in self.classes:
+        for class_info in self.classes:
             if class_info.decorator:
                 print(f"@{class_info.decorator}")
-            print(f"class {class_name}:")
+            print(f"class {class_info.class_name}:")
 
             attrs = [
                 (attr_name, attr_type)
@@ -327,8 +326,8 @@ class ExtractedInfo:
                 print(format_function(method, 4))
             print()
 
-        for function_name, function in self.functions:
-            if not with_private and _is_private(function_name):
+        for function in self.functions:
+            if not with_private and _is_private(function.name):
                 continue
             print(format_function(function, 0))
             print()
