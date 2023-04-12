@@ -13,14 +13,9 @@ from codestructure import (
     ExtractedFunctions,
     Function,
     Parameter,
-    _get_class_name,
-    _get_decorator_name,
-    _get_parameters,
     add_parent_list,
-    extract_function_info,
     main,
     parse_module,
-    print_function_info,
 )
 
 REPO_ROOT = Path(__file__).parent.parent
@@ -61,7 +56,7 @@ def test_add_parent_list() -> None:
 
 
 def test_extract_function_info() -> None:
-    """Test extract_function_info."""
+    """Test ExtractedFunctions.from_ast."""
     source_code = textwrap.dedent(
         """
 
@@ -81,7 +76,7 @@ def test_extract_function_info() -> None:
 
     ast_module = ast.parse(source_code)
     add_parent_list(ast_module)
-    extracted_functions = extract_function_info(ast_module)
+    extracted_functions = ExtractedFunctions.from_ast(ast_module)
 
     expected_functions = ExtractedFunctions(
         classes=[
@@ -123,7 +118,7 @@ def test_extract_function_info() -> None:
 
 
 def test_print_function_info_with_private() -> None:
-    """Test print_function_info with private functions included."""
+    """Test ExtractedFunctions.print with private functions included."""
     extracted_functions = ExtractedFunctions(
         classes=[
             (
@@ -175,14 +170,14 @@ def test_print_function_info_with_private() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        print_function_info(extracted_functions, with_private=True)
+        ExtractedFunctions.print(extracted_functions, with_private=True)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
 
 
 def test_print_function_info_without_private() -> None:
-    """Test print_function_info without private functions."""
+    """Test ExtractedFunctions.print without private functions."""
     extracted_functions = ExtractedFunctions(
         classes=[
             (
@@ -228,7 +223,7 @@ def test_print_function_info_without_private() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        print_function_info(extracted_functions, with_private=False)
+        ExtractedFunctions.print(extracted_functions, with_private=False)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
@@ -280,7 +275,7 @@ def test_main() -> None:
 
 
 def test_extract_function_info_with_decorator() -> None:
-    """Test extract_function_info with a decorated function."""
+    """Test ExtractedFunctions.from_ast with a decorated function."""
     source_code = textwrap.dedent(
         """
         def decorator(func):
@@ -297,7 +292,7 @@ def test_extract_function_info_with_decorator() -> None:
 
     ast_module = ast.parse(source_code)
     add_parent_list(ast_module)
-    extracted_functions = extract_function_info(ast_module)
+    extracted_functions = ExtractedFunctions.from_ast(ast_module)
 
     expected_functions = ExtractedFunctions(
         functions=[
@@ -333,7 +328,7 @@ def test_extract_function_info_with_decorator() -> None:
 
 
 def test_extract_function_info_with_value_error_in_literal_eval() -> None:
-    """Test extract_function_info with a ValueError in ast.literal_eval."""
+    """Test ExtractedFunctions.from_ast with a ValueError in ast.literal_eval."""
     source_code = textwrap.dedent(
         """
         custom_default_value = 1
@@ -361,13 +356,13 @@ def test_extract_function_info_with_value_error_in_literal_eval() -> None:
     )
 
     tree = parse_module(source_code=source_code)
-    function_info = extract_function_info(tree)
+    function_info = ExtractedFunctions.from_ast(tree)
 
     assert function_info == expected_functions
 
 
 def test_print_function_info_with_class_docstring() -> None:
-    """Test print_function_info with a class that has a docstring."""
+    """Test ExtractedFunctions.print with a class that has a docstring."""
     extracted_functions = ExtractedFunctions(
         classes=[
             (
@@ -391,14 +386,14 @@ def test_print_function_info_with_class_docstring() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        print_function_info(extracted_functions, with_private=True)
+        ExtractedFunctions.print(extracted_functions, with_private=True)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
 
 
 def test_print_function_info_with_class_attribute() -> None:
-    """Test print_function_info with a class that has an attribute."""
+    """Test ExtractedFunctions.print with a class that has an attribute."""
     extracted_functions = ExtractedFunctions(
         classes=[
             (
@@ -424,14 +419,14 @@ def test_print_function_info_with_class_attribute() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        print_function_info(extracted_functions, with_private=True)
+        ExtractedFunctions.print(extracted_functions, with_private=True)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
 
 
 def test_print_function_info_with_private_class_attribute() -> None:
-    """Test print_function_info with a class that has a private attribute."""
+    """Test ExtractedFunctions.print with a class that has a private attribute."""
     extracted_functions = ExtractedFunctions(
         classes=[
             (
@@ -455,7 +450,7 @@ def test_print_function_info_with_private_class_attribute() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        print_function_info(extracted_functions, with_private=False)
+        ExtractedFunctions.print(extracted_functions, with_private=False)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
@@ -468,10 +463,10 @@ def test_example_file() -> None:
         source_code = f.read()
 
     tree = parse_module(source_code=source_code)
-    function_info = extract_function_info(tree)
+    function_info = ExtractedFunctions.from_ast(tree)
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        print_function_info(function_info, with_private=False)
+        ExtractedFunctions.print(function_info, with_private=False)
         output = string.getvalue()
     expected = textwrap.dedent(
         """
@@ -522,14 +517,14 @@ def test_keyword_only_function() -> None:
     )
 
     with StringIO() as string, contextlib.redirect_stdout(string):
-        print_function_info(extracted_functions, with_private=False)
+        ExtractedFunctions.print(extracted_functions, with_private=False)
         output = string.getvalue()
 
     assert output.strip() == expected_output.strip()
 
 
 def test_get_class_name() -> None:
-    """Test _get_class_name."""
+    """Test Class.get_class_name."""
     source_code = textwrap.dedent(
         """
         class A:
@@ -540,11 +535,11 @@ def test_get_class_name() -> None:
     tree = parse_module(source_code=source_code)
     ast.increment_lineno(tree, 1)
     function_node = tree.body[0].body[0]  # type: ignore[attr-defined]
-    assert _get_class_name(function_node, ["A"]) == "A"
+    assert Class.get_class_name(function_node, ["A"]) == "A"
 
 
 def test_get_decorator_name() -> None:
-    """Test _get_decorator_name."""
+    """Test Class.get_decorator_name."""
     source_code = textwrap.dedent(
         """
         @my_decorator
@@ -555,7 +550,7 @@ def test_get_decorator_name() -> None:
     tree = parse_module(source_code=source_code)
     ast.increment_lineno(tree, 1)
     function_node = tree.body[0]
-    assert _get_decorator_name(function_node) == "my_decorator"  # type: ignore[arg-type]
+    assert Class.get_decorator_name(function_node) == "my_decorator"  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(
@@ -602,9 +597,9 @@ def test_get_decorator_name() -> None:
     ],
 )
 def test_get_parameters(source_code: str, expected: list[Parameter]) -> None:
-    """Test _get_parameters."""
+    """Test Function.get_parameters."""
     tree = parse_module(source_code=source_code)
     ast.increment_lineno(tree, 1)
     function_node = tree.body[0]
-    parameters = _get_parameters(function_node)  # type: ignore[arg-type]
+    parameters = Function.get_parameters(function_node)  # type: ignore[arg-type]
     assert parameters == expected
