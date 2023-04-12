@@ -87,7 +87,7 @@ def test_extract_function_info() -> None:
                     attributes=[("x", "int"), ("y", "int")],
                     functions={
                         "example_method": Function(
-                            signature="example_method",
+                            name="example_method",
                             docstring="An example method.",
                             decorator=None,
                             parameters=[Parameter("self", None, None)],
@@ -101,7 +101,7 @@ def test_extract_function_info() -> None:
             (
                 "example_function",
                 Function(
-                    signature="example_function",
+                    name="example_function",
                     docstring="An example function.",
                     decorator=None,
                     parameters=[
@@ -128,7 +128,7 @@ def test_print_function_info_with_private() -> None:
                     attributes=[("x", "int"), ("y", "int")],
                     functions={
                         "_example_private_method": Function(
-                            signature="_example_private_method",
+                            name="_example_private_method",
                             docstring="An example private method.",
                             decorator=None,
                             parameters=[Parameter("self", None, None)],
@@ -142,7 +142,7 @@ def test_print_function_info_with_private() -> None:
             (
                 "_example_private_function",
                 Function(
-                    signature="_example_private_function",
+                    name="_example_private_function",
                     docstring="An example private function.",
                     decorator=None,
                     parameters=[
@@ -187,7 +187,7 @@ def test_print_function_info_without_private() -> None:
                     attributes=[("x", "int"), ("y", "int")],
                     functions={
                         "_example_private_method": Function(
-                            signature="_example_private_method",
+                            name="_example_private_method",
                             docstring="An example private method.",
                             decorator=None,
                             parameters=[Parameter("self", None, None)],
@@ -201,7 +201,7 @@ def test_print_function_info_without_private() -> None:
             (
                 "_example_private_function",
                 Function(
-                    signature="_example_private_function",
+                    name="_example_private_function",
                     docstring="An example private function.",
                     decorator=None,
                     parameters=[
@@ -299,7 +299,7 @@ def test_extract_function_info_with_decorator() -> None:
             (
                 "decorator",
                 Function(
-                    signature="decorator",
+                    name="decorator",
                     docstring=None,
                     decorator=None,
                     parameters=[
@@ -311,7 +311,7 @@ def test_extract_function_info_with_decorator() -> None:
             (
                 "example_function",
                 Function(
-                    signature="example_function",
+                    name="example_function",
                     docstring="An example function.",
                     decorator="decorator",
                     parameters=[
@@ -342,7 +342,7 @@ def test_extract_function_info_with_value_error_in_literal_eval() -> None:
             (
                 "example_function",
                 Function(
-                    signature="example_function",
+                    name="example_function",
                     docstring=None,
                     decorator=None,
                     parameters=[
@@ -491,7 +491,7 @@ def test_keyword_only_function() -> None:
             (
                 "f",
                 Function(
-                    signature="f",
+                    name="f",
                     docstring=None,
                     decorator=None,
                     parameters=[

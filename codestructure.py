@@ -60,7 +60,7 @@ class Parameter:
 class Function:
     """A function."""
 
-    signature: str
+    name: str
     docstring: str | None
     decorator: str | None
     parameters: list[Parameter]
@@ -79,7 +79,7 @@ class Function:
         parameters = Function.get_parameters(node)
         return_type = ast.unparse(node.returns) if node.returns else None
         return Function(
-            signature=function_name,
+            name=function_name,
             docstring=docstring,
             decorator=decorator_name,
             parameters=parameters,
@@ -254,9 +254,9 @@ class ExtractedInfo:
                         for i, (cls_name, _) in enumerate(result.classes)
                         if cls_name == class_name
                     )
-                    result.classes[class_index][1].functions[func.signature] = func
+                    result.classes[class_index][1].functions[func.name] = func
                 else:
-                    result.functions.append((func.signature, func))
+                    result.functions.append((func.name, func))
         return result
 
     def print(  # noqa: A003
@@ -269,7 +269,7 @@ class ExtractedInfo:
         def format_function(function: Function, indent_level: int) -> str:
             indent = " " * indent_level
             decorator = f"{indent}@{function.decorator}\n" if function.decorator else ""
-            signature = f"{indent}def {function.signature}("
+            signature = f"{indent}def {function.name}("
 
             params = []
             for param in function.parameters:
