@@ -65,13 +65,11 @@ class Function:
     decorator: str | None
     parameters: list[Parameter]
     return_type: str | None
-    class_name: str | None = None
 
     @classmethod
     def from_node(
         cls: type[Function],
         node: ast.FunctionDef | ast.AsyncFunctionDef,
-        class_name: str | None = None,
     ) -> Function:
         """Create a Function object from an AST node."""
         function_name = node.name
@@ -85,7 +83,6 @@ class Function:
             decorator=decorator_name,
             parameters=parameters,
             return_type=return_type,
-            class_name=class_name,
         )
 
     @staticmethod
@@ -248,7 +245,7 @@ class ExtractedInfo:
                     continue
 
                 class_name = Class.get_class_name(node, class_names)
-                func = Function.from_node(node, class_name)
+                func = Function.from_node(node)
                 if class_name:
                     class_index = next(
                         i
