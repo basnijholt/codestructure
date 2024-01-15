@@ -257,7 +257,7 @@ class ExtractedInfo:
                     result.functions.append(func)
         return result
 
-    def print(  # noqa: A003
+    def print(
         self: ExtractedInfo,
         *,
         with_private: bool = True,
