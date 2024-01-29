@@ -1,4 +1,5 @@
 """CodeStructure: A Python package for extracting code structure information from Python modules."""
+
 from __future__ import annotations
 
 import argparse
@@ -317,9 +318,11 @@ class ExtractedInfo:
 
             for attr_name, attr_type in attrs:
                 print(
-                    f"    {attr_name}: {attr_type}"
-                    if attr_type
-                    else f"    {attr_name}",
+                    (
+                        f"    {attr_name}: {attr_type}"
+                        if attr_type
+                        else f"    {attr_name}"
+                    ),
                 )
 
             for _method_name, method in methods:
