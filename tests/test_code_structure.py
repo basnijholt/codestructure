@@ -1,4 +1,5 @@
 """Test codestructure."""
+
 import ast
 import contextlib
 import textwrap
@@ -253,8 +254,12 @@ def test_main() -> None:
     )
 
     args = ["codestructure", module_file_path, "--no-private", "--no-rich", "--no-copy"]
-    with mock.patch("sys.argv", args), StringIO() as string, contextlib.redirect_stdout(
-        string,
+    with (
+        mock.patch("sys.argv", args),
+        StringIO() as string,
+        contextlib.redirect_stdout(
+            string,
+        ),
     ):
         main()
         output = string.getvalue()
