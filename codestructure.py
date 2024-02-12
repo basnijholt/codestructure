@@ -33,6 +33,7 @@ def parse_module(
     Returns
     -------
     The AST representation of the module.
+
     """
     if not file_path and not source_code:  # pragma: no cover
         msg = "Either 'file_path' or 'source_code' must be provided."
@@ -94,6 +95,7 @@ class Function:
         ----------
         node
             The AST node of the function.
+
         """
         parameters = []
 
@@ -229,6 +231,7 @@ class ExtractedInfo:
         Returns
         -------
             An ExtractedInfo object containing information about the classes and functions in the module.
+
         """
         result = ExtractedInfo()
         class_names: list[str] = []
@@ -349,6 +352,7 @@ def add_parent_list(tree: ast.Module) -> None:
     ----------
     tree
         The AST representation of the module.
+
     """
     for node in ast.walk(tree):
         for child in ast.iter_child_nodes(node):
@@ -369,6 +373,7 @@ def print_syntax_with_rich(
         A string containing Python code.
     line_numbers
         Whether to print line numbers.
+
     """
     syntax = Syntax(
         s,
