@@ -288,7 +288,7 @@ class ExtractedInfo:
 
             signature += ", ".join(params)
             signature += (
-                f") -> {function.return_type if function.return_type else 'None'}:"
+                f") -> {function.return_type or 'None'}:"
             )
             indent_docs = indent + (" " * 4)
             docstring = textwrap.indent(
